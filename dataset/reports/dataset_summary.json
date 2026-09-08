@@ -1,0 +1,279 @@
+{
+  "project": "SIH26043",
+  "csv_datasets": [
+    {
+      "file": "challenge_clusters.csv",
+      "rows": 6,
+      "columns": 10,
+      "missing_values": 0,
+      "duplicate_ids": 0,
+      "data_status": {
+        "synthetic_demo": 6
+      },
+      "verification_status": {}
+    },
+    {
+      "file": "challenges.csv",
+      "rows": 30,
+      "columns": 22,
+      "missing_values": 0,
+      "duplicate_ids": 0,
+      "data_status": {
+        "synthetic_demo": 30
+      },
+      "verification_status": {}
+    },
+    {
+      "file": "departments.csv",
+      "rows": 21,
+      "columns": 12,
+      "missing_values": 0,
+      "duplicate_ids": 0,
+      "data_status": {
+        "verified_real": 21
+      },
+      "verification_status": {
+        "verified": 21
+      }
+    },
+    {
+      "file": "duplicate_test_cases.csv",
+      "rows": 24,
+      "columns": 7,
+      "missing_values": 0,
+      "duplicate_ids": 10,
+      "data_status": {},
+      "verification_status": {}
+    },
+    {
+      "file": "evidence.csv",
+      "rows": 10,
+      "columns": 11,
+      "missing_values": 0,
+      "duplicate_ids": 0,
+      "data_status": {},
+      "verification_status": {
+        "verified": 10
+      }
+    },
+    {
+      "file": "expertise.csv",
+      "rows": 45,
+      "columns": 7,
+      "missing_values": 0,
+      "duplicate_ids": 0,
+      "data_status": {},
+      "verification_status": {}
+    },
+    {
+      "file": "facilities.csv",
+      "rows": 12,
+      "columns": 13,
+      "missing_values": 0,
+      "duplicate_ids": 0,
+      "data_status": {
+        "verified_real": 12
+      },
+      "verification_status": {
+        "verified": 12
+      }
+    },
+    {
+      "file": "faculty.csv",
+      "rows": 22,
+      "columns": 14,
+      "missing_values": 0,
+      "duplicate_ids": 0,
+      "data_status": {
+        "verified_real": 22
+      },
+      "verification_status": {
+        "verified": 22
+      }
+    },
+    {
+      "file": "faculty_expertise.csv",
+      "rows": 38,
+      "columns": 7,
+      "missing_values": 0,
+      "duplicate_ids": 0,
+      "data_status": {},
+      "verification_status": {
+        "verified": 38
+      }
+    },
+    {
+      "file": "government_departments.csv",
+      "rows": 10,
+      "columns": 12,
+      "missing_values": 0,
+      "duplicate_ids": 0,
+      "data_status": {
+        "verified_real": 10
+      },
+      "verification_status": {
+        "verified": 10
+      }
+    },
+    {
+      "file": "impact_metrics.csv",
+      "rows": 10,
+      "columns": 13,
+      "missing_values": 0,
+      "duplicate_ids": 0,
+      "data_status": {},
+      "verification_status": {
+        "verified": 10
+      }
+    },
+    {
+      "file": "implementation_partners.csv",
+      "rows": 6,
+      "columns": 12,
+      "missing_values": 0,
+      "duplicate_ids": 0,
+      "data_status": {
+        "synthetic_demo": 6
+      },
+      "verification_status": {
+        "verified": 6
+      }
+    },
+    {
+      "file": "industry.csv",
+      "rows": 8,
+      "columns": 19,
+      "missing_values": 0,
+      "duplicate_ids": 0,
+      "data_status": {
+        "synthetic_demo": 5,
+        "verified_real": 3
+      },
+      "verification_status": {
+        "unverified": 5,
+        "verified": 3
+      }
+    },
+    {
+      "file": "innovation_entities.csv",
+      "rows": 8,
+      "columns": 15,
+      "missing_values": 0,
+      "duplicate_ids": 0,
+      "data_status": {
+        "verified_real": 8
+      },
+      "verification_status": {
+        "verified": 8
+      }
+    },
+    {
+      "file": "institution.csv",
+      "rows": 10,
+      "columns": 22,
+      "missing_values": 0,
+      "duplicate_ids": 0,
+      "data_status": {
+        "verified_real": 10
+      },
+      "verification_status": {
+        "verified": 10
+      }
+    },
+    {
+      "file": "institution_expertise.csv",
+      "rows": 31,
+      "columns": 8,
+      "missing_values": 0,
+      "duplicate_ids": 0,
+      "data_status": {
+        "verified_real": 31
+      },
+      "verification_status": {
+        "verified": 31
+      }
+    },
+    {
+      "file": "notifications.csv",
+      "rows": 12,
+      "columns": 9,
+      "missing_values": 4,
+      "duplicate_ids": 0,
+      "data_status": {},
+      "verification_status": {}
+    },
+    {
+      "file": "priority_test_cases.csv",
+      "rows": 25,
+      "columns": 8,
+      "missing_values": 0,
+      "duplicate_ids": 0,
+      "data_status": {},
+      "verification_status": {}
+    },
+    {
+      "file": "projects.csv",
+      "rows": 8,
+      "columns": 15,
+      "missing_values": 0,
+      "duplicate_ids": 0,
+      "data_status": {
+        "synthetic_demo": 8
+      },
+      "verification_status": {}
+    },
+    {
+      "file": "reputation.csv",
+      "rows": 12,
+      "columns": 8,
+      "missing_values": 2,
+      "duplicate_ids": 0,
+      "data_status": {},
+      "verification_status": {}
+    },
+    {
+      "file": "solutions.csv",
+      "rows": 12,
+      "columns": 18,
+      "missing_values": 0,
+      "duplicate_ids": 0,
+      "data_status": {
+        "synthetic_demo": 12
+      },
+      "verification_status": {}
+    },
+    {
+      "file": "users.csv",
+      "rows": 15,
+      "columns": 9,
+      "missing_values": 3,
+      "duplicate_ids": 0,
+      "data_status": {
+        "synthetic_demo": 15
+      },
+      "verification_status": {
+        "verified": 15
+      }
+    }
+  ],
+  "json_datasets": [
+    {
+      "file": "ai_test_cases.json",
+      "items": 42,
+      "root_type": "list"
+    },
+    {
+      "file": "matching_test_cases.json",
+      "items": 12,
+      "root_type": "list"
+    }
+  ],
+  "totals": {
+    "csv_files": 22,
+    "csv_rows": 375,
+    "missing_values": 9,
+    "duplicate_ids": 10,
+    "json_files": 2,
+    "json_items": 54
+  }
+}

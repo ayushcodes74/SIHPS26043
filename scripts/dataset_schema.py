@@ -53,6 +53,7 @@ DATASET_SCHEMAS = {
             ],
 
             "data_status": [
+                "verified_real",
                 "real_verified",
                 "real_unverified",
                 "synthetic_demo"
@@ -65,6 +66,8 @@ DATASET_SCHEMAS = {
                 "Institute",
                 "Faculty",
                 "Research Department",
+                "Academic & Research",
+                "Clinical & Public Health",
                 "Other"
             ]
         }
@@ -123,6 +126,7 @@ DATASET_SCHEMAS = {
             ],
 
             "data_status": [
+                "verified_real",
                 "real_verified",
                 "real_unverified",
                 "synthetic_demo"
@@ -179,6 +183,7 @@ DATASET_SCHEMAS = {
                 "Robotics",
                 "Remote Sensing",
                 "GIS",
+                "Software",
                 "Biotechnology",
                 "Public Health",
                 "Manufacturing",
@@ -285,6 +290,7 @@ DATASET_SCHEMAS = {
             ],
 
             "data_status": [
+                "verified_real",
                 "real_verified",
                 "real_unverified",
                 "synthetic_demo"

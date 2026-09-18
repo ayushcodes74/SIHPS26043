@@ -95,11 +95,11 @@ async function getSummary() {
             COUNT(*) FILTER (WHERE status = 'RESOLVED')         AS resolved,
 
             COUNT(*) FILTER (
-                WHERE priority_score >= $2
+                WHERE priority_score != 'NaN'::numeric AND priority_score >= $2
             )                                                    AS high_priority,
 
             COUNT(*) FILTER (
-                WHERE priority_score >= $3
+                WHERE priority_score != 'NaN'::numeric AND priority_score >= $3
             )                                                    AS critical_priority,
 
             COUNT(DISTINCT cluster_id) FILTER (
@@ -173,7 +173,7 @@ async function getPriorityProblems(limit = 10) {
              updated_at
          FROM problems
          WHERE status NOT IN ('RESOLVED', 'MONITORING', 'SUSTAINED')
-         ORDER BY priority_score DESC, severity DESC, created_at DESC
+         ORDER BY CASE WHEN priority_score = 'NaN'::numeric THEN -1 ELSE priority_score END DESC, severity DESC, created_at DESC
          LIMIT $1`,
         [limit]
     );
@@ -282,7 +282,7 @@ async function getProblems(filters = {}) {
              p.updated_at
          FROM problems p
          WHERE ${whereClause}
-         ORDER BY p.priority_score DESC, p.severity DESC, p.created_at DESC
+         ORDER BY CASE WHEN p.priority_score = 'NaN'::numeric THEN -1 ELSE p.priority_score END DESC, p.severity DESC, p.created_at DESC
          LIMIT $${limitParam} OFFSET $${offsetParam}`,
         values
     );
@@ -312,12 +312,12 @@ async function getDistrictAnalytics() {
              COALESCE(district, 'Unknown')         AS district,
              COUNT(*)::int                         AS total_problems,
              COUNT(*) FILTER (
-                 WHERE priority_score >= $1
+                 WHERE priority_score != 'NaN'::numeric AND priority_score >= $1
              )::int                                AS high_priority,
              COUNT(*) FILTER (
                  WHERE status = 'RESOLVED'
              )::int                                AS resolved,
-             ROUND(AVG(priority_score))::int       AS average_priority
+             COALESCE(ROUND(AVG(NULLIF(priority_score, 'NaN'::numeric)))::int, 0) AS average_priority
          FROM problems
          GROUP BY district
          ORDER BY total_problems DESC`,
@@ -368,7 +368,7 @@ async function getClusterAnalytics() {
              pc.severity,
              pc.report_count,
              COUNT(p.id) FILTER (
-                 WHERE p.priority_score >= $1
+                 WHERE p.priority_score != 'NaN'::numeric AND p.priority_score >= $1
              )::int AS high_priority_problems,
              COUNT(p.id)::int AS confirmed_report_count
          FROM problem_clusters pc

@@ -157,7 +157,7 @@ export function ProblemCard({ problem, onSelect }) {
             textOverflow: "ellipsis",
           }}
         >
-          {problem.ai_summary || problem.description}
+          {problem.ai_description || problem.ai_summary || problem.description}
         </p>
 
         {/* Demographics & Geographic Line */}

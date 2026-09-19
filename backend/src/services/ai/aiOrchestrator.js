@@ -43,6 +43,7 @@ REQUIRED SCHEMA:
   "required_expertise": ["Array", "of", "strings"],
   "root_causes": ["Array", "of", "strings"],
   "summary": "String (A concise 1-2 sentence summary of the issue)",
+  "ai_description": "String (A detailed technical AI breakdown of the civic problem, its root causes, and recommended engineering approach)",
   "confidence": "Float between 0.0 and 1.0",
   "explanation": "String (Why you chose these classifications)"
 }

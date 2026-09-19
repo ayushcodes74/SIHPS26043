@@ -201,13 +201,13 @@ export function AuthoritySection() {
           />
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-            {priorityQueue.map((prob) => {
+            {priorityQueue.map((prob, idx) => {
               const score = prob.priority_score || 0;
               const isCrit = score >= 80;
 
               return (
                 <div
-                  key={prob.id}
+                  key={`${prob.id || "prob"}-${idx}`}
                   onClick={() => navigate(`/problems/${prob.id}`)}
                   style={{
                     display: "flex",

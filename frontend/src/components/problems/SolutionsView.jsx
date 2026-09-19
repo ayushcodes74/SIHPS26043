@@ -213,8 +213,16 @@ export function SolutionsView({ problemId, problem, onProblemUpdated }) {
 
   useEffect(() => {
     let ignore = false;
+    setLoading(true);
+    setSolutions([]);
+    setRankedSolutions([]);
+    setError("");
+
     async function loadInitial() {
-      if (!problemId) return;
+      if (!problemId) {
+        setLoading(false);
+        return;
+      }
       try {
         const [allRes, rankRes] = await Promise.all([
           solutionApi.getSolutionsForProblem(problemId, { limit: 50 }).catch(() => ({ solutions: [] })),

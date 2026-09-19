@@ -21,6 +21,7 @@ function normalizeAIResponse(raw, provider, mode) {
         required_expertise: Array.isArray(raw.required_expertise) ? raw.required_expertise.map(String) : [],
         root_causes: Array.isArray(raw.root_causes) ? raw.root_causes.map(String) : [],
         summary: String(raw.summary || ""),
+        ai_description: String(raw.ai_description || raw.summary || ""),
         confidence: typeof raw.confidence === "number" ? raw.confidence : parseFloat(raw.confidence) || 0.0,
         explanation: String(raw.explanation || ""),
         provider: provider,

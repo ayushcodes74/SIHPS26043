@@ -77,6 +77,11 @@ function localSemanticAnalysis(challenge) {
 
     const loc = challenge.district ? ` in ${challenge.district}` : "";
     const summary = `${domain} challenge identified${loc}: ${challenge.title}. Immediate engineering and statutory intervention required.`;
+    const ai_description = `AI Diagnostic Assessment (${domain} — ${subdomain}):
+Ground analysis indicates a critical civic bottleneck regarding "${challenge.title}"${loc}. 
+Underlying conditions reflect: ${challenge.description || "Unresolved municipal infrastructure deficit"}.
+Primary mechanical and structural drivers include: ${root_causes.join("; ")}.
+Remediation requires coordinated deployment of ${required_expertise.join(", ")} to stabilize local infrastructure and restore citizen safety.`;
 
     const mapped = {
         domain,
@@ -87,6 +92,7 @@ function localSemanticAnalysis(challenge) {
         required_expertise,
         root_causes,
         summary,
+        ai_description,
         confidence: 0.92,
         explanation: "Analyzed via CivicSync Autonomous Semantic Classification Engine",
         provider: "nlp",
@@ -141,6 +147,21 @@ async function analyzeWithNLP(challenge) {
 
         const data = await response.json();
         
+        const rootCausesText = (data.root_causes && data.root_causes.length) 
+            ? data.root_causes.join("; ") 
+            : "Underlying structural wear and deferred civic maintenance";
+        const expertiseText = (data.required_expertise && data.required_expertise.length)
+            ? data.required_expertise.join(", ")
+            : "Civil Engineering, Public Administration";
+        const locText = challenge.district ? ` in ${challenge.district}` : "";
+
+        const richAiDescription = data.ai_description || 
+            `AI Diagnostic Assessment (${data.domain || "Civic Infrastructure"} — ${data.subdomain || "Public Safety"}):
+Ground analysis indicates an active civic challenge regarding "${challenge.title}"${locText}.
+Field statement reflects: ${challenge.description || data.summary || "Unresolved municipal infrastructure condition"}.
+Identified structural/environmental drivers: ${rootCausesText}.
+Operational remediation requires coordinated deployment of ${expertiseText} to stabilize conditions and restore citizen safety.`;
+
         const mapped = {
             domain: data.domain,
             subdomain: data.subdomain,
@@ -150,6 +171,7 @@ async function analyzeWithNLP(challenge) {
             required_expertise: data.required_expertise || [],
             root_causes: data.root_causes || [],
             summary: data.summary,
+            ai_description: richAiDescription,
             confidence: data.confidence,
             explanation: data.explanation || "Analyzed by Python NLP microservice",
             provider: "nlp",

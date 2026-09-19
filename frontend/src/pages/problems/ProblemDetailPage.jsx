@@ -141,6 +141,7 @@ export function ProblemDetailPage({ id }) {
     domain: problem.category,
     subdomain: problem.subcategory,
     summary: problem.ai_summary || problem.description,
+    ai_description: problem.ai_description || problem.ai_summary || problem.description,
     severity: problem.severity || 5,
     urgency: problem.urgency || 5,
     confidence: problem.confidence ? Number(problem.confidence) : 0.82,
@@ -481,74 +482,186 @@ export function ProblemDetailPage({ id }) {
       <div>
         {/* Tab 1: Overview / Problem Details */}
         {currentTab === "overview" && (
-          <div className={isCitizen || isStudent ? "cs-grid-1" : "cs-grid-2"} style={{ alignItems: "start", gap: "1.5rem" }}>
-            <Card
-              title={isCitizen || isStudent ? "Problem Description & Field Evidence" : "Problem Description & Ground Context"}
-              subtitle={isCitizen ? "Citizen submission details" : (isStudent ? "Understand the civic challenge" : "Citizen reported statement")}
+          <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+            {/* AI Synthesized Problem Description & Intelligence Banner */}
+            <div
+              style={{
+                backgroundColor: "#ffffff",
+                borderRadius: "var(--radius-xl)",
+                border: "1.5px solid #e0e7ff",
+                boxShadow: "0 4px 20px -2px rgba(99, 102, 241, 0.12)",
+                padding: "1.5rem 1.75rem",
+                position: "relative",
+                overflow: "hidden",
+              }}
             >
-              <p style={{ margin: "0 0 1rem", fontSize: "0.95rem", color: "var(--text-secondary)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
-                {problem.description}
-              </p>
-
-              {/* Evidence Section */}
-              {problem.evidence_url && (
-                <div style={{ marginTop: "1.25rem", paddingTop: "1rem", borderTop: "1px solid var(--border-color)" }}>
-                  <h5 style={{ margin: "0 0 0.65rem", fontSize: "0.9rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                    <span>{problem.evidence_type?.includes("video") || problem.evidence_url.endsWith(".mp4") ? "🎥" : "📷"}</span>
-                    <span>Attached Field Evidence</span>
-                    {problem.evidence_name && (
-                      <span style={{ fontWeight: 400, color: "var(--text-muted)", fontSize: "0.8rem" }}>
-                        ({problem.evidence_name})
-                      </span>
-                    )}
-                  </h5>
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: "4px",
+                  background: "linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899)",
+                }}
+              />
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: "0.75rem",
+                  marginBottom: "1rem",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
                   <div
                     style={{
-                      borderRadius: "var(--radius-md)",
-                      overflow: "hidden",
-                      backgroundColor: "#0f172a",
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "10px",
+                      backgroundColor: "rgba(99, 102, 241, 0.1)",
+                      color: "#6366f1",
                       display: "flex",
-                      justifyContent: "center",
                       alignItems: "center",
-                      maxHeight: "360px",
+                      justifyContent: "center",
+                      fontSize: "1.1rem",
                     }}
                   >
-                    {problem.evidence_type?.includes("video") ||
-                    problem.evidence_url.endsWith(".mp4") ||
-                    problem.evidence_url.endsWith(".webm") ||
-                    problem.evidence_url.endsWith(".mov") ? (
-                      <video
-                        src={getFileUrl(problem.evidence_url)}
-                        controls
-                        style={{ maxWidth: "100%", maxHeight: "360px" }}
-                      />
-                    ) : (
-                      <img
-                        src={getFileUrl(problem.evidence_url)}
-                        alt="Field Evidence"
-                        style={{ maxWidth: "100%", maxHeight: "360px", objectFit: "contain" }}
-                      />
+                    ✨
+                  </div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "var(--text-primary)" }}>
+                      AI-Synthesized Problem Description
+                    </h4>
+                    <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                      Autonomous civic diagnostic analysis & technical assessment
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                  <span
+                    style={{
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      padding: "0.25rem 0.65rem",
+                      borderRadius: "var(--radius-full)",
+                      backgroundColor: "#e0e7ff",
+                      color: "#4338ca",
+                      border: "1px solid #c7d2fe",
+                    }}
+                  >
+                    Confidence: {Math.round((Number(problem.ai_confidence || problem.confidence || 0.92)) * 100)}%
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      padding: "0.25rem 0.65rem",
+                      borderRadius: "var(--radius-full)",
+                      backgroundColor: "#fee2e2",
+                      color: "#b91c1c",
+                      border: "1px solid #fca5a5",
+                    }}
+                  >
+                    Severity: {problem.severity || "HIGH"}
+                  </span>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  backgroundColor: "rgba(248, 250, 252, 0.85)",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "var(--radius-lg)",
+                  padding: "1.1rem 1.25rem",
+                  fontSize: "0.95rem",
+                  lineHeight: 1.65,
+                  color: "var(--text-primary)",
+                  whiteSpace: "pre-wrap",
+                }}
+              >
+                {problem.ai_description || problem.ai_summary || "AI assessment in progress. Analyzing environmental telemetry, municipal jurisdiction, and engineering parameters."}
+              </div>
+            </div>
+
+            {/* Split view: Citizen Ground Context and Technical NLP Analysis */}
+            <div className={isCitizen || isStudent ? "cs-grid-1" : "cs-grid-2"} style={{ alignItems: "start", gap: "1.5rem" }}>
+              <Card
+                title={isCitizen || isStudent ? "Citizen Field Report & Evidence" : "Problem Description & Ground Context"}
+                subtitle={isCitizen ? "Citizen submission details" : (isStudent ? "Understand the civic challenge" : "Citizen reported statement")}
+              >
+                <div style={{ marginBottom: "0.5rem" }}>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>
+                    Citizen's Submitted Statement:
+                  </span>
+                </div>
+                <p style={{ margin: "0 0 1rem", fontSize: "0.95rem", color: "var(--text-secondary)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+                  {problem.description}
+                </p>
+
+                {/* Evidence Section */}
+                {problem.evidence_url && (
+                  <div style={{ marginTop: "1.25rem", paddingTop: "1rem", borderTop: "1px solid var(--border-color)" }}>
+                    <h5 style={{ margin: "0 0 0.65rem", fontSize: "0.9rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                      <span>{problem.evidence_type?.includes("video") || problem.evidence_url.endsWith(".mp4") ? "🎥" : "📷"}</span>
+                      <span>Attached Field Evidence</span>
+                      {problem.evidence_name && (
+                        <span style={{ fontWeight: 400, color: "var(--text-muted)", fontSize: "0.8rem" }}>
+                          ({problem.evidence_name})
+                        </span>
+                      )}
+                    </h5>
+                    <div
+                      style={{
+                        borderRadius: "var(--radius-md)",
+                        overflow: "hidden",
+                        backgroundColor: "#0f172a",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        maxHeight: "360px",
+                      }}
+                    >
+                      {problem.evidence_type?.includes("video") ||
+                      problem.evidence_url.endsWith(".mp4") ||
+                      problem.evidence_url.endsWith(".webm") ||
+                      problem.evidence_url.endsWith(".mov") ? (
+                        <video
+                          src={problem.evidence_url.startsWith("http") ? problem.evidence_url : `http://localhost:5000${problem.evidence_url.startsWith("/") ? "" : "/"}${problem.evidence_url}`}
+                          controls
+                          style={{ maxWidth: "100%", maxHeight: "360px" }}
+                        />
+                      ) : (
+                        <img
+                          src={problem.evidence_url.startsWith("http") ? problem.evidence_url : `http://localhost:5000${problem.evidence_url.startsWith("/") ? "" : "/"}${problem.evidence_url}`}
+                          alt="Field Evidence"
+                          style={{ maxWidth: "100%", maxHeight: "360px", objectFit: "contain" }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Geographic Details */}
+                <div style={{ marginTop: "1.5rem", paddingTop: "1rem", borderTop: "1px solid var(--border-color)", fontSize: "0.85rem" }}>
+                  <h5 style={{ margin: "0 0 0.5rem", fontSize: "0.9rem", fontWeight: 700 }}>Geographic Details</h5>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.5rem", color: "var(--text-muted)" }}>
+                    <div>District: <strong style={{ color: "var(--text-primary)" }}>{problem.district || "N/A"}</strong></div>
+                    <div>City / Block: <strong style={{ color: "var(--text-primary)" }}>{problem.city || "N/A"}</strong></div>
+                    <div>Address: <strong style={{ color: "var(--text-primary)" }}>{problem.address || "N/A"}</strong></div>
+                    {problem.affected_people && (
+                      <div>Affected Population: <strong style={{ color: "var(--text-primary)" }}>{problem.affected_people}</strong></div>
                     )}
                   </div>
                 </div>
-              )}
+              </Card>
 
-              {/* Geographic Details */}
-              <div style={{ marginTop: "1.5rem", paddingTop: "1rem", borderTop: "1px solid var(--border-color)", fontSize: "0.85rem" }}>
-                <h5 style={{ margin: "0 0 0.5rem", fontSize: "0.9rem", fontWeight: 700 }}>Geographic Details</h5>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.5rem", color: "var(--text-muted)" }}>
-                  <div>District: <strong style={{ color: "var(--text-primary)" }}>{problem.district || "N/A"}</strong></div>
-                  <div>City / Block: <strong style={{ color: "var(--text-primary)" }}>{problem.city || "N/A"}</strong></div>
-                  <div>Address: <strong style={{ color: "var(--text-primary)" }}>{problem.address || "N/A"}</strong></div>
-                  {problem.affected_people && (
-                    <div>Affected Population: <strong style={{ color: "var(--text-primary)" }}>{problem.affected_people}</strong></div>
-                  )}
-                </div>
-              </div>
-            </Card>
-
-            {/* AI Analysis View - AI Intelligence & Capability Breakdown */}
-            <AIAnalysisView aiAnalysis={aiAnalysisObj} priorityScore={problem.priority_score} />
+              {/* AI Analysis View - AI Intelligence & Capability Breakdown */}
+              <AIAnalysisView analysis={aiAnalysisObj} aiAnalysis={aiAnalysisObj} priorityScore={problem.priority_score} />
+            </div>
           </div>
         )}
 

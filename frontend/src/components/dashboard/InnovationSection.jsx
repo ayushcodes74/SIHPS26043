@@ -193,9 +193,9 @@ export function InnovationSection({ role }) {
           />
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            {authoritySelectedProblems.map((prob) => (
+            {authoritySelectedProblems.map((prob, idx) => (
               <div
-                key={prob.id}
+                key={`${prob.id || "sel"}-${idx}`}
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
@@ -302,13 +302,13 @@ export function InnovationSection({ role }) {
           />
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-            {techProblems.slice(0, 6).map((prob) => {
+            {techProblems.slice(0, 6).map((prob, idx) => {
               const prio = prob.priority_score ?? ((prob.severity || 0) * 5 + (prob.urgency || 0) * 5);
               const skills = Array.isArray(prob.required_expertise) ? prob.required_expertise : [];
 
               return (
                 <div
-                  key={prob.id}
+                  key={`${prob.id || "tech"}-${idx}`}
                   onClick={() => navigate(`/problems/${prob.id}`)}
                   style={{
                     display: "flex",

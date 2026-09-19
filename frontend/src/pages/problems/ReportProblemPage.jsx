@@ -1335,6 +1335,28 @@ export function ReportProblemPage() {
                   </div>
                 </div>
 
+                {/* AI-Synthesized Problem Description */}
+                <div style={{ marginTop: "1.25rem", paddingTop: "1rem", borderTop: "1px solid var(--border-color)" }}>
+                  <div style={{ fontSize: "0.825rem", fontWeight: 700, color: "var(--color-primary)", display: "flex", alignItems: "center", gap: "0.4rem", marginBottom: "0.5rem" }}>
+                    <Icon name="cpu" size={15} color="var(--color-primary)" />
+                    <span>AI-Synthesized Problem Description & Technical Intelligence</span>
+                  </div>
+                  <div
+                    style={{
+                      backgroundColor: "var(--bg-muted)",
+                      borderRadius: "var(--radius-md)",
+                      padding: "0.95rem 1.15rem",
+                      fontSize: "0.92rem",
+                      lineHeight: 1.6,
+                      color: "var(--text-primary)",
+                      whiteSpace: "pre-wrap",
+                      border: "1px solid var(--border-color)",
+                    }}
+                  >
+                    {aiAnalysis.ai_description || aiAnalysis.summary || createdProblem.ai_description || createdProblem.ai_summary || "AI assessment completed successfully."}
+                  </div>
+                </div>
+
                 {/* Required Expertise Tags */}
                 {Array.isArray(aiAnalysis.required_expertise) && aiAnalysis.required_expertise.length > 0 && (
                   <div style={{ marginTop: "1.25rem", paddingTop: "1rem", borderTop: "1px solid var(--border-color)" }}>

@@ -117,6 +117,9 @@ console.log("🔥 PRIORITY SCORE:", priorityScore);
 );
                
         const problem = result.rows[0];
+        if (problem) {
+            problem.ai_description = problem.ai_description || ai.ai_description || ai.summary || "";
+        }
 
         // ------------------------------------------------------------------
         // Persist Challenge Dossier into PostgreSQL (if dossier table exists)

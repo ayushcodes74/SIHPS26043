@@ -594,7 +594,7 @@ const memoryDB = {
         },
         {
             id: 3,
-            problem_id: "prob-200",
+            problem_id: 42,
             submitted_by: 2,
             submitter_name: "Priya Sharma (Student Innovator)",
             title: "IoT Solar-Powered Groundwater Fluoride & Arsenic Filtration Cartridge",
@@ -684,11 +684,24 @@ const memoryDB = {
     ]
 };
 
-let problemCounter = 200;
-let challengeCounter = 200;
-let dossierCounter = 200;
+let problemCounter = 301;
+let challengeCounter = 301;
+let dossierCounter = 301;
 let userCounter = 20;
 let solutionCounter = 20;
+
+function getNextProblemId() {
+    let maxNum = 300;
+    for (const p of (memoryDB.problems || [])) {
+        const digits = String(p.id).replace(/\D/g, "");
+        const n = parseInt(digits, 10);
+        if (!isNaN(n) && n >= maxNum) {
+            maxNum = n;
+        }
+    }
+    const nextNum = Math.max(maxNum + 1, problemCounter++);
+    return `prob-${nextNum}`;
+}
 
 function findProblemById(rawId) {
     if (rawId === undefined || rawId === null) return null;
@@ -706,8 +719,13 @@ function findProblemById(rawId) {
         return false;
     });
 
-    if (found && typeof found.status !== "string") {
-        found.status = "REPORTED";
+    if (found) {
+        if (typeof found.status !== "string") {
+            found.status = "REPORTED";
+        }
+        if (!found.ai_description) {
+            found.ai_description = found.ai_summary || found.description || "";
+        }
     }
 
     return found || null;
@@ -836,7 +854,7 @@ async function executeQuery(text, params = []) {
 
     // 1. INSERT INTO problems
     if (upperText.startsWith("INSERT INTO PROBLEMS")) {
-        const id = `prob-${problemCounter++}`;
+        const id = getNextProblemId();
         const now = new Date().toISOString();
 
         let reporter_id = 1;
@@ -849,6 +867,7 @@ async function executeQuery(text, params = []) {
         let address = null;
         let affected_people = 100;
         let ai_summary = "";
+        let ai_description = "";
         let ai_keywords = [];
         let required_expertise = [];
         let severity = 6;
@@ -867,6 +886,7 @@ async function executeQuery(text, params = []) {
             address = params[7] || address;
             affected_people = params[12] || affected_people;
             ai_summary = params[13] || ai_summary;
+            ai_description = params[13] || ai_summary;
             ai_keywords = params[14] || ai_keywords;
             required_expertise = params[15] || required_expertise;
             severity = params[16] || severity;
@@ -882,6 +902,7 @@ async function executeQuery(text, params = []) {
             district = params[5] || district;
             affected_people = params[6] || affected_people;
             ai_summary = params[7] || ai_summary;
+            ai_description = params[7] || ai_summary;
             ai_keywords = params[8] || ai_keywords;
             required_expertise = params[9] || required_expertise;
             severity = params[10] || severity;
@@ -905,6 +926,7 @@ async function executeQuery(text, params = []) {
             address,
             affected_people: Number(affected_people) || 0,
             ai_summary: ai_summary || `${category} challenge reported: ${title}`,
+            ai_description: ai_description || ai_summary || `${category} challenge reported: ${title}`,
             ai_keywords: Array.isArray(ai_keywords) && ai_keywords.length ? ai_keywords : ["Civic", category],
             required_expertise: Array.isArray(required_expertise) && required_expertise.length ? required_expertise : ["Civil Engineering", "Data Analysis"],
             severity: Number(severity) || 6,
@@ -1041,11 +1063,12 @@ async function executeQuery(text, params = []) {
         if (upperText.includes("COUNT(*)::INT AS TOTAL FROM SOLUTIONS WHERE PROBLEM_ID = $1")) {
             const targetProb = findProblemById(params[0]);
             const targetId = targetProb ? targetProb.id : params[0];
-            const pDigits = String(params[0]).replace(/\D/g, "");
+            const pNum = parseInt(String(params[0]).replace(/\D/g, ""), 10);
             const count = list.filter(s => {
-                const sDigits = String(s.problem_id).replace(/\D/g, "");
-                return String(s.problem_id).toLowerCase() === String(targetId).toLowerCase() ||
-                    (pDigits && sDigits && pDigits === sDigits);
+                const sNum = parseInt(String(s.problem_id).replace(/\D/g, ""), 10);
+                if (String(s.problem_id).toLowerCase() === String(targetId).toLowerCase()) return true;
+                if (!isNaN(pNum) && !isNaN(sNum) && pNum === sNum) return true;
+                return false;
             }).length;
             return { rows: [{ total: count }], rowCount: 1 };
         }
@@ -1053,11 +1076,12 @@ async function executeQuery(text, params = []) {
         if (upperText.includes("WHERE S.PROBLEM_ID = $1") || upperText.includes("WHERE PROBLEM_ID = $1")) {
             const targetProb = findProblemById(params[0]);
             const targetId = targetProb ? targetProb.id : params[0];
-            const pDigits = String(params[0]).replace(/\D/g, "");
+            const pNum = parseInt(String(params[0]).replace(/\D/g, ""), 10);
             const filtered = list.filter(s => {
-                const sDigits = String(s.problem_id).replace(/\D/g, "");
-                return String(s.problem_id).toLowerCase() === String(targetId).toLowerCase() ||
-                    (pDigits && sDigits && pDigits === sDigits);
+                const sNum = parseInt(String(s.problem_id).replace(/\D/g, ""), 10);
+                if (String(s.problem_id).toLowerCase() === String(targetId).toLowerCase()) return true;
+                if (!isNaN(pNum) && !isNaN(sNum) && pNum === sNum) return true;
+                return false;
             });
             const limit = Number(params[1]) || 20;
             const sliced = filtered.slice(0, limit);
@@ -1601,6 +1625,7 @@ async function executeQuery(text, params = []) {
 
         list = list.map(p => ({
             ...p,
+            ai_description: p.ai_description || p.ai_summary || p.description || "",
             status: typeof p.status === "string" ? p.status : "REPORTED",
             reporter_name: memoryDB.users.find(u => u.id === p.reporter_id)?.name || "Citizen Contributor"
         }));

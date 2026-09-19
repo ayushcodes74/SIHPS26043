@@ -29,6 +29,9 @@ export function ProblemJourney({ problem, onStatusUpdated, onSelectTab }) {
   // Fetch solutions and implementations for this problem to compute accurate state
   useEffect(() => {
     let ignore = false;
+    setSolutions([]);
+    setImplementations([]);
+
     async function loadData() {
       if (!problem?.id) return;
       try {
@@ -38,12 +41,8 @@ export function ProblemJourney({ problem, onStatusUpdated, onSelectTab }) {
         ]);
 
         if (!ignore) {
-          if (solRes.status === "fulfilled" && solRes.value?.solutions) {
-            setSolutions(solRes.value.solutions);
-          }
-          if (implRes.status === "fulfilled" && implRes.value?.implementations) {
-            setImplementations(implRes.value.implementations);
-          }
+          setSolutions(solRes.status === "fulfilled" && solRes.value?.solutions ? solRes.value.solutions : []);
+          setImplementations(implRes.status === "fulfilled" && implRes.value?.implementations ? implRes.value.implementations : []);
         }
       } catch (err) {
         console.error("Error loading problem journey context:", err);

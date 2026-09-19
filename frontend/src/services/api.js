@@ -13,21 +13,21 @@ import { apiRequest } from "./apiClient.js";
 // ============================================================================
 export const authApi = {
   register: (payload) =>
-    apiRequest("/auth/register", {
+    apiRequest("/api/auth/register", {
       method: "POST",
       body: payload,
       requireAuth: false,
     }),
 
   login: (payload) =>
-    apiRequest("/auth/login", {
+    apiRequest("/api/auth/login", {
       method: "POST",
       body: payload,
       requireAuth: false,
     }),
 
   me: () =>
-    apiRequest("/auth/me", {
+    apiRequest("/api/auth/me", {
       method: "GET",
     }),
 };

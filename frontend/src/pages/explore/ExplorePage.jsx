@@ -52,7 +52,7 @@ export function ExplorePage() {
             const t = (p.title || "").trim();
             return /^(M\d+|Test\s+M\d+|Passport\s+Problem|Cit\d+|Auth\d+)/i.test(t);
           };
-          const cleanProblems = (res.problems || []).filter((p) => isAuthorityOrAdmin || !isTestRecord(p));
+          const cleanProblems = (res.problems || []).filter((p) => !isTestRecord(p));
           setProblems(cleanProblems);
           setLoading(false);
         }
@@ -174,7 +174,8 @@ export function ExplorePage() {
       }
 
       // 6. Priority filter
-      const pScore = p.priority_score ?? ((p.severity || 0) * 5 + (p.urgency || 0) * 5);
+      const _ps1 = Number(p.priority_score);
+      const pScore = (!isNaN(_ps1) && p.priority_score !== null) ? _ps1 : ((p.severity || 0) * 5 + (p.urgency || 0) * 5);
       if (priorityFilter === "HIGH" && pScore < 60) return false;
       if (priorityFilter === "CRITICAL" && pScore < 80) return false;
 
@@ -195,8 +196,10 @@ export function ExplorePage() {
     switch (sortBy) {
       case "PRIORITY":
         return list.sort((a, b) => {
-          const scoreA = a.priority_score ?? ((a.severity || 0) * 5 + (a.urgency || 0) * 5);
-          const scoreB = b.priority_score ?? ((b.severity || 0) * 5 + (b.urgency || 0) * 5);
+          const _psA = Number(a.priority_score);
+          const scoreA = (!isNaN(_psA) && a.priority_score !== null) ? _psA : ((a.severity || 0) * 5 + (a.urgency || 0) * 5);
+          const _psB = Number(b.priority_score);
+          const scoreB = (!isNaN(_psB) && b.priority_score !== null) ? _psB : ((b.severity || 0) * 5 + (b.urgency || 0) * 5);
           return scoreB - scoreA;
         });
       case "AFFECTED":
@@ -225,7 +228,8 @@ export function ExplorePage() {
         };
       }
       map[dist].total += 1;
-      const prio = p.priority_score ?? ((p.severity || 0) * 5 + (p.urgency || 0) * 5);
+      const _psD = Number(p.priority_score);
+      const prio = (!isNaN(_psD) && p.priority_score !== null) ? _psD : ((p.severity || 0) * 5 + (p.urgency || 0) * 5);
       if (prio >= 60) map[dist].high_priority += 1;
       if (p.status === "RESOLVED") map[dist].resolved += 1;
       map[dist].total_affected += Number(p.affected_people) || 0;

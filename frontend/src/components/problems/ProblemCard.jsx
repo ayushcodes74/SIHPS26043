@@ -12,7 +12,8 @@ export function ProblemCard({ problem, onSelect }) {
   const isAuthorityOrAdmin = role === "AUTHORITY" || role === "ADMIN";
   const isSolver = ["STUDENT", "FACULTY", "RESEARCHER", "STARTUP", "MSME"].includes(role);
 
-  const priority = problem.priority_score ?? (
+  const _ps = Number(problem.priority_score);
+  const priority = (!isNaN(_ps) && problem.priority_score !== null) ? _ps : (
     (problem.severity || 0) * 5 + (problem.urgency || 0) * 5
   );
 

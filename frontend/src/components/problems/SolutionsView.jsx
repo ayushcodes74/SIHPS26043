@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { Icon } from "../common/Icons";
 import { Button } from "../common/Button";
 import { Card } from "../common/Cards";
-import { StatusBadge } from "../common/Badges";
+import { StatusBadge, Badge } from "../common/Badges";
 import { Modal } from "../common/Modal";
 import { MatchScoreIndicator } from "../common/ProgressBar";
 import { solutionApi, problemApi, implementationApi } from "../../services/api";
 import { useAuth } from "../../context/useAuth.js";
+import { getFileUrl } from "../../services/apiClient.js";
 import { useToast } from "../../context/useToast.js";
 import { useTranslation } from "../../context/useTranslation.js";
 
@@ -1134,7 +1135,7 @@ export function SolutionsView({ problemId, problem, onProblemUpdated }) {
                 {sol.evidence && (
                   <div style={{ marginTop: "0.5rem" }}>
                     <a
-                      href={sol.evidence.startsWith("http") ? sol.evidence : `http://localhost:5000${sol.evidence.startsWith("/") ? "" : "/"}${sol.evidence}`}
+                      href={getFileUrl(sol.evidence)}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{

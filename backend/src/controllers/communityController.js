@@ -24,11 +24,13 @@ async function updateProblemPriority(problemId) {
     await pool.query("UPDATE problems SET priority_score = $1 WHERE id = $2", [newPriority, problemId]);
 }
 
+const { parseProblemId } = require("../utils/validation");
+
 async function supportProblem(req, res) {
-    const problemId = parseInt(req.params.id, 10);
+    const problemId = parseProblemId(req.params.id);
     const userId = req.user.id;
 
-    if (isNaN(problemId)) {
+    if (!problemId) {
         return res.status(400).json({ message: "Invalid problem id" });
     }
 
@@ -74,10 +76,10 @@ async function supportProblem(req, res) {
 }
 
 async function removeSupport(req, res) {
-    const problemId = parseInt(req.params.id, 10);
+    const problemId = parseProblemId(req.params.id);
     const userId = req.user.id;
 
-    if (isNaN(problemId)) {
+    if (!problemId) {
         return res.status(400).json({ message: "Invalid problem id" });
     }
 
@@ -108,16 +110,16 @@ async function removeSupport(req, res) {
 }
 
 async function getSupports(req, res) {
-    const problemId = parseInt(req.params.id, 10);
+    const problemId = parseProblemId(req.params.id);
     const userId = req.user ? req.user.id : null;
 
-    if (isNaN(problemId)) {
+    if (!problemId) {
         return res.status(400).json({ message: "Invalid problem id" });
     }
 
     try {
         const countRes = await pool.query("SELECT COUNT(*) FROM problem_supports WHERE problem_id = $1", [problemId]);
-        const supportCount = parseInt(countRes.rows[0].count, 10);
+        const supportCount = countRes.rows[0]?.count ? parseInt(countRes.rows[0].count, 10) : 0;
 
         let supported = false;
         if (userId) {
@@ -139,11 +141,11 @@ async function getSupports(req, res) {
 }
 
 async function addComment(req, res) {
-    const problemId = parseInt(req.params.id, 10);
+    const problemId = parseProblemId(req.params.id);
     const userId = req.user.id;
     let { comment } = req.body;
 
-    if (isNaN(problemId)) {
+    if (!problemId) {
         return res.status(400).json({ message: "Invalid problem id" });
     }
 
@@ -196,9 +198,9 @@ async function addComment(req, res) {
 }
 
 async function getComments(req, res) {
-    const problemId = parseInt(req.params.id, 10);
+    const problemId = parseProblemId(req.params.id);
 
-    if (isNaN(problemId)) {
+    if (!problemId) {
         return res.status(400).json({ message: "Invalid problem id" });
     }
 

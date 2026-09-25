@@ -3,6 +3,7 @@ import { Icon } from "../components/common/Icons";
 import { Button } from "../components/common/Button";
 import { useRouter } from "../context/useRouter.js";
 import { useAuth } from "../context/useAuth.js";
+import { useTranslation } from "../context/useTranslation.js";
 
 // Language toggle state
 const LANGS = [
@@ -387,6 +388,7 @@ export function LandingPage() {
                 Dhanbad District · 5,200 affected
               </div>
             </div>
+          )}
 
             {/* AI pipeline steps */}
             {[
@@ -710,6 +712,169 @@ export function LandingPage() {
           {c.footer}
         </span>
       </footer>
+
+      {/* Quick Role Selection Modal */}
+      {showRoleModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(24, 24, 22, 0.4)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "1.5rem",
+          }}
+          onClick={() => setShowRoleModal(false)}
+        >
+          <div
+            style={{
+              backgroundColor: "var(--bg-card)",
+              borderRadius: "24px",
+              padding: "2.25rem",
+              maxWidth: "520px",
+              width: "100%",
+              boxShadow: "0 24px 60px rgba(0, 0, 0, 0.15)",
+              border: "1px solid var(--border-color)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.25rem" }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                  <div
+                    style={{
+                      width: "28px",
+                      height: "28px",
+                      borderRadius: "8px",
+                      backgroundColor: "var(--color-primary)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#ffffff",
+                    }}
+                  >
+                    <Icon name="shield-check" size={16} />
+                  </div>
+                  <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "1.45rem", margin: 0, color: "var(--text-primary)" }}>
+                    {isHi ? "अपनी भूमिका चुनें" : "Select Your Role"}
+                  </h3>
+                </div>
+                <p style={{ margin: "0.35rem 0 0", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                  {isHi
+                    ? "वह कार्यक्षेत्र चुनें जिसे आप अनुभव करना चाहते हैं:"
+                    : "Choose which stakeholder view you want to experience:"}
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowRoleModal(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "1.2rem",
+                  cursor: "pointer",
+                  color: "var(--text-muted)",
+                  padding: "0.25rem",
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", margin: "1.5rem 0" }}>
+              {[
+                {
+                  role: "CITIZEN",
+                  label: isHi ? "नागरिक" : "Citizen",
+                  desc: isHi ? "समस्या दर्ज करें और सत्यापन ट्रैक करें" : "Report problems & track verified progress",
+                },
+                {
+                  role: "STUDENT",
+                  label: isHi ? "छात्र / शोधकर्ता" : "Student / Researcher",
+                  desc: isHi ? "चुनौतियां देखें और तकनीकी समाधान दें" : "View challenges & submit technical proposals",
+                },
+                {
+                  role: "AUTHORITY",
+                  label: isHi ? "नगरपालिका प्राधिकरण" : "Municipal Authority",
+                  desc: isHi ? "प्रस्ताव अपनाएं और कार्य आदेश जारी करें" : "Review proposals & issue implementation orders",
+                },
+                {
+                  role: "MSME",
+                  label: isHi ? "स्टार्टअप / एमएसएमई" : "Startup / MSME",
+                  desc: isHi ? "परियोजनाएं कार्यान्वित करें और साक्ष्य दें" : "Execute projects & upload milestone proof",
+                },
+                {
+                  role: "UNIVERSITY",
+                  label: isHi ? "शैक्षणिक संस्थान" : "Academic Institution",
+                  desc: isHi ? "विभाग सहभागिता और शोध दल" : "Department engagement & research teams",
+                },
+                {
+                  role: "ADMIN",
+                  label: isHi ? "प्लेटफॉर्म प्रशासन" : "Platform Oversight",
+                  desc: isHi ? "विश्वसनीयता, एसएलए और सार्वजनिक शासन" : "Integrity, SLAs, and public governance",
+                },
+              ].map((item) => (
+                <button
+                  key={item.role}
+                  onClick={() => handleRoleSelect(item.role)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "0.9rem 1.2rem",
+                    borderRadius: "14px",
+                    backgroundColor: "var(--bg-muted)",
+                    border: "1px solid var(--border-color)",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    transition: "all 150ms ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "var(--bg-muted-hover)";
+                    e.currentTarget.style.borderColor = "var(--ink-700)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "var(--bg-muted)";
+                    e.currentTarget.style.borderColor = "var(--border-color)";
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: "0.95rem", color: "var(--text-primary)" }}>
+                      {item.label}
+                    </div>
+                    <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "2px" }}>
+                      {item.desc}
+                    </div>
+                  </div>
+                  <span style={{ fontSize: "1rem", color: "var(--text-primary)" }}>&rarr;</span>
+                </button>
+              ))}
+            </div>
+
+            <div style={{ textAlign: "center" }}>
+              <button
+                onClick={() => {
+                  setShowRoleModal(false);
+                  navigate("/login");
+                }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "0.85rem",
+                  color: "var(--text-secondary)",
+                  cursor: "pointer",
+                  textDecoration: "underline",
+                }}
+              >
+                {isHi ? "या ईमेल और पासवर्ड से साइन इन करें" : "Or sign in with an existing email & password"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -2,17 +2,23 @@ import { useState, useEffect } from "react";
 import { studentApi, reputationApi, projectApi } from "../../services/api";
 import { Card, StatCard } from "../common/Cards";
 import { Button } from "../common/Button";
+import { StatusBadge } from "../common/Badges";
+import { Icon } from "../common/Icons";
 import { MatchScoreIndicator } from "../common/ProgressBar";
 import { EmptyState, LoadingSkeleton } from "../common/Feedback";
 import { useRouter } from "../../context/useRouter";
+import { useTranslation } from "../../context/useTranslation";
 
 export function StudentSection({ user }) {
   const { navigate } = useRouter();
+  const { t, language } = useTranslation();
+  const isHi = language === "hi";
 
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [skills, setSkills] = useState([]);
   const [matchedProblems, setMatchedProblems] = useState([]);
+  const [allCommunityProblems, setAllCommunityProblems] = useState([]);
   const [mySolutions, setMySolutions] = useState([]);
   const [projects, setProjects] = useState([]);
   const [reputation, setReputation] = useState(null);
@@ -89,30 +95,30 @@ export function StudentSection({ user }) {
       {/* Student Metrics from Real Data */}
       <div className="cs-grid-4">
         <StatCard
-          title="Skill Matches"
+          title={isHi ? "कौशल मेल" : "Skill Matches"}
           value={loading ? "..." : String(matchedProblems.length)}
-          subtitle="Problems matching your expertise"
+          subtitle={isHi ? "आपकी विशेषज्ञता से मेल खाती समस्याएं" : "Problems matching your expertise"}
           icon="target"
           iconColor="var(--color-primary)"
         />
         <StatCard
-          title="Your Active Solutions"
+          title={isHi ? "सक्रिय समाधान" : "Your Active Solutions"}
           value={loading ? "..." : String(mySolutions.length)}
-          subtitle="Proposals & collaborations"
+          subtitle={isHi ? "प्रस्ताव और सहयोग" : "Proposals & collaborations"}
           icon="cpu"
           iconColor="var(--color-secondary)"
         />
         <StatCard
-          title="Reputation Score"
+          title={isHi ? "प्रतिष्ठा स्कोर" : "Reputation Score"}
           value={loading ? "..." : String(reputation?.score || 0)}
-          subtitle={`Current tier: ${reputation?.tier || "BRONZE"}`}
+          subtitle={isHi ? `वर्तमान स्तर: ${reputation?.tier || "BRONZE"}` : `Current tier: ${reputation?.tier || "BRONZE"}`}
           icon="award"
           iconColor="var(--color-warning)"
         />
         <StatCard
-          title="Registered Skills"
+          title={isHi ? "पंजीकृत कौशल" : "Registered Skills"}
           value={loading ? "..." : String(skills.length)}
-          subtitle="Validated student competencies"
+          subtitle={isHi ? "सत्यापित छात्र क्षमताएं" : "Validated student competencies"}
           icon="graduation-cap"
           iconColor="var(--color-success)"
         />
@@ -120,30 +126,30 @@ export function StudentSection({ user }) {
 
       {/* Student Skill Profile Card */}
       <Card
-        title="Your Student Competency Profile"
-        subtitle={profile ? `${profile.course || "Student"} • ${profile.institution_name || "Academic Institution"}` : "Skills registered in your academic profile"}
+        title={isHi ? "आपकी छात्र क्षमता प्रोफ़ाइल" : "Your Student Competency Profile"}
+        subtitle={profile ? (isHi ? `${profile.course || "छात्र"} • ${profile.institution_name || "शैक्षणिक संस्थान"}` : `${profile.course || "Student"} • ${profile.institution_name || "Academic Institution"}`) : (isHi ? "आपकी प्रोफ़ाइल में दर्ज कौशल" : "Skills registered in your academic profile")}
         actions={
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <Button variant="primary" size="sm" icon="target" onClick={() => navigate("/matches")}>
-              Matching Skills Page →
+              {isHi ? "कौशल मिलान पृष्ठ →" : "Matching Skills Page →"}
             </Button>
             <Button variant="outline" size="sm" onClick={() => navigate("/reputation")}>
-              Reputation
+              {isHi ? "प्रतिष्ठा" : "Reputation"}
             </Button>
           </div>
         }
       >
         {skills.length === 0 ? (
           <div style={{ padding: "0.5rem 0", color: "var(--text-muted)", fontSize: "0.85rem" }}>
-            No skills registered yet.{" "}
+            {isHi ? "अभी तक कोई कौशल पंजीकृत नहीं है। " : "No skills registered yet. "}
             <button
               type="button"
               onClick={() => navigate("/matches")}
               style={{ color: "var(--color-primary)", textDecoration: "underline", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}
             >
-              Add skills here
+              {isHi ? "यहाँ कौशल जोड़ें" : "Add skills here"}
             </button>{" "}
-            to start discovering relevant civic problems.
+            {isHi ? "ताकि प्रासंगिक नागरिक समस्याओं की खोज शुरू हो सके।" : "to start discovering relevant civic problems."}
           </div>
         ) : (
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
@@ -175,14 +181,14 @@ export function StudentSection({ user }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "0.5rem" }}>
           <div>
             <h3 style={{ margin: "0 0 0.25rem", fontSize: "1.2rem", fontWeight: 700 }}>
-              Problems Matching Your Skills
+              {isHi ? "आपके कौशल से मेल खाती समस्याएं" : "Problems Matching Your Skills"}
             </h3>
             <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-muted)" }}>
-              Contribute specialized knowledge to real societal problems matching your competencies
+              {isHi ? "अपनी दक्षताओं से मेल खाती वास्तविक सामाजिक समस्याओं में विशेष ज्ञान का योगदान दें" : "Contribute specialized knowledge to real societal problems matching your competencies"}
             </p>
           </div>
           <Button variant="outline" size="sm" icon="arrow-right" onClick={() => navigate("/matches")}>
-            View All Matches ({matchedProblems.length})
+            {isHi ? `सभी मैच देखें (${matchedProblems.length})` : `View All Matches (${matchedProblems.length})`}
           </Button>
         </div>
 
@@ -196,9 +202,9 @@ export function StudentSection({ user }) {
         ) : matchedProblems.length === 0 ? (
           <EmptyState
             icon="target"
-            title="No direct skill matches found right now"
-            description="Add or update skills on the Matching Skills page to discover tailored civic challenges."
-            actionLabel="Manage Matching Skills"
+            title={isHi ? "वर्तमान में कोई सीधा कौशल मिलान नहीं मिला" : "No direct skill matches found right now"}
+            description={isHi ? "अनुकूलित नागरिक चुनौतियों की खोज के लिए कौशल मिलान पृष्ठ पर कौशल जोड़ें या अपडेट करें।" : "Add or update skills on the Matching Skills page to discover tailored civic challenges."}
+            actionLabel={isHi ? "कौशल प्रबंधित करें" : "Manage Matching Skills"}
             onAction={() => navigate("/matches")}
           />
         ) : (
@@ -231,7 +237,7 @@ export function StudentSection({ user }) {
                         {prob.category}
                       </span>
                       <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                        #{prob.id} &bull; 📍 {prob.district || "District"} {prob.city ? `(${prob.city})` : ""}
+                        #{prob.id} &bull; 📍 {prob.district || (isHi ? "जिला" : "District")} {prob.city ? `(${prob.city})` : ""}
                       </span>
                     </div>
 
@@ -259,7 +265,7 @@ export function StudentSection({ user }) {
                   {/* Step 1: Required Expertise */}
                   <div>
                     <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>
-                      1. Required Expertise
+                      {isHi ? "1. आवश्यक विशेषज्ञता" : "1. Required Expertise"}
                     </div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem", marginTop: "0.35rem" }}>
                       {prob.required_expertise?.map((s) => (
@@ -273,7 +279,7 @@ export function StudentSection({ user }) {
                   {/* Step 2: Your Matching Skills */}
                   <div>
                     <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--color-primary)", textTransform: "uppercase" }}>
-                      2. Your Matching Skills
+                      {isHi ? "2. आपके मेल खाते कौशल" : "2. Your Matching Skills"}
                     </div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem", marginTop: "0.35rem" }}>
                       {prob.matched_skills?.map((s) => (
@@ -287,7 +293,7 @@ export function StudentSection({ user }) {
                   {/* Step 3: Contribution Area */}
                   <div>
                     <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--color-success)", textTransform: "uppercase" }}>
-                      3. Match Evaluation
+                      {isHi ? "3. मिलान मूल्यांकन" : "3. Match Evaluation"}
                     </div>
                     <p style={{ margin: "0.35rem 0 0", fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.4 }}>
                       <strong>{prob.match_tier}</strong> ({prob.match_score}%) &bull; {getContributionArea(prob.matched_skills || [])}
@@ -297,10 +303,10 @@ export function StudentSection({ user }) {
                   {/* Step 4: Next Steps */}
                   <div>
                     <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--color-warning)", textTransform: "uppercase" }}>
-                      4. Next Steps
+                      {isHi ? "4. अगला कदम" : "4. Next Steps"}
                     </div>
                     <p style={{ margin: "0.35rem 0 0", fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.4 }}>
-                      Propose a solution to collaborate on this civic challenge.
+                      {isHi ? "इस नागरिक चुनौती पर सहयोग के लिए समाधान प्रस्तावित करें।" : "Propose a solution to collaborate on this civic challenge."}
                     </p>
                   </div>
                 </div>
@@ -318,7 +324,7 @@ export function StudentSection({ user }) {
                       icon="arrow-right"
                       onClick={() => navigate(`/problems/${prob.id}`)}
                     >
-                      View Problem
+                      {isHi ? "समस्या देखें" : "View Problem"}
                     </Button>
                     <Button
                       variant="primary"
@@ -326,7 +332,7 @@ export function StudentSection({ user }) {
                       icon="plus-circle"
                       onClick={() => navigate(`/problems/${prob.id}?tab=solutions`)}
                     >
-                      Contribute Solution
+                      {isHi ? "समाधान प्रस्तावित करें" : "Contribute Solution"}
                     </Button>
                   </div>
                 </div>

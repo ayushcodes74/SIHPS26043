@@ -39,17 +39,17 @@ export function Sidebar() {
 
       case "STUDENT":
         roleItems = [
-          { path: "/matches", label: "Matching Skills", icon: "target" },
-          { path: "/collaborations", label: "Collaborations", icon: "users" },
-          { path: "/solutions", label: "Solutions", icon: "cpu" },
+          { path: "/matches", label: t("nav.matchingSkills"), icon: "target" },
+          { path: "/collaborations", label: t("nav.collaborations"), icon: "users" },
+          { path: "/solutions", label: t("nav.solutions"), icon: "cpu" },
         ];
         break;
 
       case "RESEARCHER":
         roleItems = [
-          { path: "/matches", label: "Research Matches", icon: "microscope" },
-          { path: "/collaborations", label: "Collaborations", icon: "users" },
-          { path: "/solutions", label: "Solutions", icon: "cpu" },
+          { path: "/matches", label: t("nav.researchMatches"), icon: "microscope" },
+          { path: "/collaborations", label: t("nav.collaborations"), icon: "users" },
+          { path: "/solutions", label: t("nav.solutions"), icon: "cpu" },
         ];
         break;
 
@@ -64,9 +64,9 @@ export function Sidebar() {
       case "STARTUP":
       case "MSME":
         roleItems = [
-          { path: "/matches", label: "Innovation Matches", icon: "rocket" },
-          { path: "/solutions", label: "Solutions", icon: "cpu" },
-          { path: "/impact", label: "Pilots & Projects", icon: "activity" },
+          { path: "/matches", label: t("nav.innovationMatches"), icon: "rocket" },
+          { path: "/solutions", label: t("nav.solutions"), icon: "cpu" },
+          { path: "/impact", label: t("nav.pilotsProjects"), icon: "activity" },
         ];
         break;
 
@@ -84,16 +84,15 @@ export function Sidebar() {
 
       case "ADMIN":
         roleItems = [
-          { path: "/report", label: t("nav.report"), icon: "plus-circle" },
-          { path: "/solutions", label: "Solution Review", icon: "cpu" },
-          { path: "/impact", label: "Impact & Pilots", icon: "activity" },
-          { path: "/dashboard/analytics", label: "Analytics Dashboard", icon: "activity" },
-          { path: "/dashboard/trust", label: "Trust & Anti-Gaming", icon: "shield-check" },
+          { path: "/solutions", label: t("nav.solutionReview"), icon: "cpu" },
+          { path: "/impact", label: t("nav.implementationPilot"), icon: "activity" },
+          { path: "/dashboard/analytics", label: t("nav.analyticsDashboard"), icon: "activity" },
+          { path: "/dashboard/trust", label: t("nav.trustAntiGaming"), icon: "shield-check" },
         ];
         break;
 
       default:
-        roleItems = [{ path: "/report", label: t("nav.report"), icon: "plus-circle" }];
+        roleItems = [];
     }
 
     const trailingItems = [

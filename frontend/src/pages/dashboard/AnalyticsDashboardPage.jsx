@@ -321,7 +321,7 @@ export default function AnalyticsDashboardPage() {
 
                     <div>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem", marginBottom: "0.3rem" }}>
-                        <span style={{ fontWeight: "600" }}>3. Active Pilots & Deployments</span>
+                        <span style={{ fontWeight: "600" }}>3. MSME Execution & Proofs</span>
                         <span style={{ fontWeight: "600" }}>{pipeline.piloted} ({pilotedPercent}%)</span>
                       </div>
                       <div style={{ height: "10px", backgroundColor: "#e2e8f0", borderRadius: "5px", overflow: "hidden" }}>
@@ -331,7 +331,7 @@ export default function AnalyticsDashboardPage() {
 
                     <div>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem", marginBottom: "0.3rem" }}>
-                        <span style={{ fontWeight: "600" }}>4. Field Impact Verified</span>
+                        <span style={{ fontWeight: "600" }}>4. Closed by Authority</span>
                         <span style={{ fontWeight: "600" }}>{pipeline.impact_verified} ({impactPercent}%)</span>
                       </div>
                       <div style={{ height: "10px", backgroundColor: "#e2e8f0", borderRadius: "5px", overflow: "hidden" }}>
@@ -394,8 +394,8 @@ export default function AnalyticsDashboardPage() {
                     }}
                   >
                     <div style={{ fontSize: "2rem", fontWeight: "800", color: "#7e22ce" }}>{pipeline.piloted}</div>
-                    <div style={{ fontWeight: "600", color: "#581c87", marginTop: "0.25rem" }}>In Field Pilot</div>
-                    <div style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "0.25rem" }}>Milestone tracking active</div>
+                    <div style={{ fontWeight: "600", color: "#581c87", marginTop: "0.25rem" }}>MSME Execution</div>
+                    <div style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "0.25rem" }}>Field proofs & telemetry</div>
                   </div>
 
                   <div
@@ -408,8 +408,8 @@ export default function AnalyticsDashboardPage() {
                     }}
                   >
                     <div style={{ fontSize: "2rem", fontWeight: "800", color: "#15803d" }}>{pipeline.impact_verified}</div>
-                    <div style={{ fontWeight: "600", color: "#14532d", marginTop: "0.25rem" }}>Impact Verified</div>
-                    <div style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "0.25rem" }}>Audited by Municipal Authority</div>
+                    <div style={{ fontWeight: "600", color: "#14532d", marginTop: "0.25rem" }}>Closed by Authority</div>
+                    <div style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "0.25rem" }}>Verified on-ground resolution</div>
                   </div>
                 </div>
 

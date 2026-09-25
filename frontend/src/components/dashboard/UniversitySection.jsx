@@ -6,6 +6,7 @@ import { StatusBadge } from "../common/Badges";
 import { Icon } from "../common/Icons";
 import { EmptyState, LoadingSkeleton } from "../common/Feedback";
 import { useRouter } from "../../context/useRouter";
+import { useTranslation } from "../../context/useTranslation";
 
 // Workflow step display for the institutional lifecycle
 const WORKFLOW_STEPS = [
@@ -23,6 +24,8 @@ const WORKFLOW_STEPS = [
 
 export function UniversitySection() {
   const { navigate } = useRouter();
+  const { t, language } = useTranslation();
+  const isHi = language === "hi";
 
   const [loading, setLoading] = useState(true);
   const [counts, setCounts]     = useState({ facultyCount: 0, studentCount: 0 });

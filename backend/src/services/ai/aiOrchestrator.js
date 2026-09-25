@@ -43,6 +43,7 @@ REQUIRED SCHEMA:
   "required_expertise": ["Array", "of", "strings"],
   "root_causes": ["Array", "of", "strings"],
   "summary": "String (A concise 1-2 sentence summary of the issue)",
+  "ai_description": "String (A detailed technical AI breakdown of the civic problem, its root causes, and recommended engineering approach)",
   "confidence": "Float between 0.0 and 1.0",
   "explanation": "String (Why you chose these classifications)"
 }
@@ -105,8 +106,10 @@ async function analyzeChallenge(challenge) {
         }
     }
 
-    // This should never really happen if NLP is running, but if NLP is down too:
-    throw new Error("All AI providers and NLP fallback failed. Last error: " + (lastError ? lastError.message : "None"));
+    // Zero-downtime safety guarantee: If all providers fail, use local semantic classifier
+    console.warn("All AI providers and remote NLP failed. Activating local semantic classifier.");
+    const { localSemanticAnalysis } = require("./providers/nlpFallbackProvider");
+    return localSemanticAnalysis(challenge);
 }
 
 async function explainMatch(problemReqs, profileSkills, matchScore) {

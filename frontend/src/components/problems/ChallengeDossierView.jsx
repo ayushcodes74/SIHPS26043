@@ -56,7 +56,7 @@ export function ChallengeDossierView({ dossier, legacyAnalysis }) {
               </h2>
             </div>
             <p style={{ margin: "0.35rem 0 0", fontSize: "0.85rem", color: "#94a3b8" }}>
-              Structured AI decomposition powered by SIH 2026 Antigravity General Engine
+              Structured AI decomposition powered by CivicSync Autonomous Intelligence Engine
             </p>
           </div>
 

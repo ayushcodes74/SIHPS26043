@@ -117,6 +117,9 @@ console.log("🔥 PRIORITY SCORE:", priorityScore);
 );
                
         const problem = result.rows[0];
+        if (problem) {
+            problem.ai_description = problem.ai_description || ai.ai_description || ai.summary || "";
+        }
 
         // ------------------------------------------------------------------
         // Persist Challenge Dossier into PostgreSQL (if dossier table exists)
@@ -490,10 +493,12 @@ async function getProblemStatusHistory(req, res) {
     }
 }
 
-async function getDuplicates(req, res) {
-    const problemId = parseInt(req.params.id, 10);
+const { parseProblemId } = require("../utils/validation");
 
-    if (isNaN(problemId)) {
+async function getDuplicates(req, res) {
+    const problemId = parseProblemId(req.params.id);
+
+    if (!problemId) {
         return res.status(400).json({
             message: "Invalid problem id"
         });

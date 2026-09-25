@@ -60,8 +60,23 @@ const MAX_LENGTHS = {
  */
 function formatSolution(row) {
     if (!row) return null;
+    let images = Array.isArray(row.images) ? row.images : [];
+    let videos = Array.isArray(row.videos) ? row.videos : [];
+
+    if (typeof row.evidence === "string" && row.evidence.startsWith("{")) {
+        try {
+            const parsed = JSON.parse(row.evidence);
+            if (Array.isArray(parsed.images)) images = parsed.images;
+            if (Array.isArray(parsed.videos)) videos = parsed.videos;
+        } catch {
+            // fallback
+        }
+    }
+
     return {
         ...row,
+        images: images.slice(0, 5),
+        videos: videos.slice(0, 2),
         estimated_cost:
             row.estimated_cost !== null && row.estimated_cost !== undefined
                 ? Number(row.estimated_cost)
@@ -168,7 +183,20 @@ async function submitSolution({ problemId, userId, payload }) {
         }
     }
 
-    // 4. Insert solution with SUBMITTED status (never allow client to set status)
+    // 4. Serialize images and videos into evidence JSON if present
+    let finalEvidence = payload.evidence ? payload.evidence.trim() : null;
+    const images = Array.isArray(payload.images) ? payload.images.slice(0, 5) : [];
+    const videos = Array.isArray(payload.videos) ? payload.videos.slice(0, 2) : [];
+
+    if (images.length > 0 || videos.length > 0) {
+        finalEvidence = JSON.stringify({
+            documentUrl: finalEvidence,
+            images,
+            videos,
+        });
+    }
+
+    // 5. Insert solution with SUBMITTED status (never allow client to set status)
     const result = await pool.query(
         `INSERT INTO solutions
             (problem_id, submitted_by, title, description,
@@ -197,7 +225,7 @@ async function submitSolution({ problemId, userId, payload }) {
             payload.scalability ? payload.scalability.trim() : null,
             payload.required_resources ? payload.required_resources.trim() : null,
             payload.risks ? payload.risks.trim() : null,
-            payload.evidence ? payload.evidence.trim() : null,
+            finalEvidence,
             teamId,
         ]
     );
@@ -247,8 +275,8 @@ async function getSolutionsForProblem(problemId, options = {}) {
     );
 
     return {
-        solutions: result.rows.map(formatSolution),
-        total: countResult.rows[0].total,
+        solutions: (result?.rows || []).map(formatSolution),
+        total: countResult?.rows?.[0]?.total ? parseInt(countResult.rows[0].total, 10) : (result?.rows?.length || 0),
     };
 }
 

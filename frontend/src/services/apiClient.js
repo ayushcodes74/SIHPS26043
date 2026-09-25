@@ -14,7 +14,11 @@ export const USER_KEY = "civicsync_user";
 
 export function getStoredToken() {
   try {
-    return localStorage.getItem(TOKEN_KEY);
+    const t = localStorage.getItem(TOKEN_KEY);
+    if (!t || t === "null" || t === "undefined" || t.trim() === "") {
+      return null;
+    }
+    return t;
   } catch (e) {
     console.error("Storage access error:", e);
     return null;
@@ -23,7 +27,7 @@ export function getStoredToken() {
 
 export function setStoredToken(token) {
   try {
-    if (token) {
+    if (token && token !== "null" && token !== "undefined") {
       localStorage.setItem(TOKEN_KEY, token);
     } else {
       localStorage.removeItem(TOKEN_KEY);
@@ -36,7 +40,10 @@ export function setStoredToken(token) {
 export function getStoredUser() {
   try {
     const raw = localStorage.getItem(USER_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw || raw === "null" || raw === "undefined") {
+      return null;
+    }
+    return JSON.parse(raw);
   } catch (e) {
     console.error("User storage parse error:", e);
     return null;

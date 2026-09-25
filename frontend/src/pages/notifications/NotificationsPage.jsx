@@ -252,8 +252,8 @@ export default function NotificationsPage() {
             activeFilter === "UNREAD"
               ? "You have reviewed all your civic updates. All clear!"
               : activeFilter === "CRITICAL"
-              ? "No critical priority notifications recorded."
-              : "Notifications will appear here when authorities verify your reports, when matching opportunities arise, or when your solutions receive evaluation."
+                ? "No critical priority notifications recorded."
+                : "Notifications will appear here when authorities verify your reports, when matching opportunities arise, or when your solutions receive evaluation."
           }
           actionLabel={activeFilter !== "ALL" ? "View All Notifications" : "Explore Civic Challenges"}
           onAction={activeFilter !== "ALL" ? () => setActiveFilter("ALL") : () => navigate("/explore")}

@@ -45,7 +45,7 @@ export function ProblemCard({ problem, onSelect }) {
     <div
       onClick={handleCardClick}
       style={{
-        backgroundColor: "#ffffff",
+        backgroundColor: "var(--bg-card)",
         border: "1px solid var(--border-color)",
         borderRadius: "var(--radius-lg)",
         padding: "1.25rem",
@@ -57,7 +57,7 @@ export function ProblemCard({ problem, onSelect }) {
         transition: "all var(--transition-fast)",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "var(--color-primary)";
+        e.currentTarget.style.borderColor = "var(--ink-700)";
         e.currentTarget.style.boxShadow = "var(--shadow-md)";
         e.currentTarget.style.transform = "translateY(-2px)";
       }}
@@ -134,10 +134,11 @@ export function ProblemCard({ problem, onSelect }) {
         <h4
           style={{
             margin: "0 0 0.5rem",
-            fontSize: "1.05rem",
-            fontWeight: 700,
+            fontSize: "1.1rem",
+            fontWeight: 600,
+            fontFamily: "var(--font-serif)",
             color: "var(--text-primary)",
-            lineHeight: 1.4,
+            lineHeight: 1.35,
           }}
         >
           {problem.title}
@@ -157,7 +158,7 @@ export function ProblemCard({ problem, onSelect }) {
             textOverflow: "ellipsis",
           }}
         >
-          {problem.ai_summary || problem.description}
+          {problem.ai_description || problem.ai_summary || problem.description}
         </p>
 
         {/* Demographics & Geographic Line */}

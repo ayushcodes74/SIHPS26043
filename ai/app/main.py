@@ -4,7 +4,7 @@ from app.routes.challenge import router
 
 
 app = FastAPI(
-    title="SIH26043 AI Service",
+    title="CivicSync AI Service",
     version="1.0.0"
 )
 
@@ -20,5 +20,5 @@ async def health():
 
     return {
         "status": "ok",
-        "service": "SIH26043 AI Service"
+        "service": "CivicSync AI Service"
     }

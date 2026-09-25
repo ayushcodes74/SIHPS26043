@@ -14,15 +14,16 @@ const {
 
 // Re-use parser from student matching service
 const { parseIntParam } = require("../services/studentMatchingService");
+const { parseProblemId } = require("../utils/validation");
 
 // ---------------------------------------------------------------------------
 // GET /api/problems/:id/researcher-matches
 // ---------------------------------------------------------------------------
 
 async function getResearcherMatches(req, res) {
-    const problemId = parseInt(req.params.id, 10);
+    const problemId = parseProblemId(req.params.id);
 
-    if (isNaN(problemId)) {
+    if (!problemId) {
         return res.status(400).json({ message: "Invalid problem id" });
     }
 

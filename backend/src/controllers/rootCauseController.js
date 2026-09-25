@@ -40,10 +40,12 @@ function handleError(error, res, fallbackMessage) {
     res.status(500).json({ message: fallbackMessage });
 }
 
+const { parseProblemId } = require("../utils/validation");
+
 // POST /api/problems/:id/root-causes/analyze
 async function analyzeRootCausesHandler(req, res) {
-    const problemId = parseInt(req.params.id, 10);
-    if (isNaN(problemId)) {
+    const problemId = parseProblemId(req.params.id);
+    if (!problemId) {
         return res.status(400).json({ message: "Invalid problem id" });
     }
 
@@ -62,8 +64,8 @@ async function analyzeRootCausesHandler(req, res) {
 
 // POST /api/problems/:id/root-causes
 async function createRootCauseHandler(req, res) {
-    const problemId = parseInt(req.params.id, 10);
-    if (isNaN(problemId)) {
+    const problemId = parseProblemId(req.params.id);
+    if (!problemId) {
         return res.status(400).json({ message: "Invalid problem id" });
     }
 
@@ -85,8 +87,8 @@ async function createRootCauseHandler(req, res) {
 
 // GET /api/problems/:id/root-causes
 async function getProblemRootCausesHandler(req, res) {
-    const problemId = parseInt(req.params.id, 10);
-    if (isNaN(problemId)) {
+    const problemId = parseProblemId(req.params.id);
+    if (!problemId) {
         return res.status(400).json({ message: "Invalid problem id" });
     }
 
@@ -207,8 +209,8 @@ async function verifyRootCauseHandler(req, res) {
 
 // GET /api/problems/:id/root-causes/summary
 async function getProblemRootCausesSummaryHandler(req, res) {
-    const problemId = parseInt(req.params.id, 10);
-    if (isNaN(problemId)) {
+    const problemId = parseProblemId(req.params.id);
+    if (!problemId) {
         return res.status(400).json({ message: "Invalid problem id" });
     }
 

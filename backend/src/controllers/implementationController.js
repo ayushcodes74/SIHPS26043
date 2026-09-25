@@ -121,12 +121,15 @@ async function getSolutionImplementation(req, res) {
     }
 }
 
+const { parseProblemId } = require("../utils/validation");
+
 // ---------------------------------------------------------------------------
 // GET /api/problems/:id/implementations
 // ---------------------------------------------------------------------------
 async function getProblemImplementations(req, res) {
-    const problemId = parseInt(req.params.id, 10);
-    if (isNaN(problemId)) {
+    const rawId = req.params.id;
+    const problemId = parseProblemId(rawId) || rawId;
+    if (!problemId) {
         return res.status(400).json({ message: "Invalid problem id" });
     }
 

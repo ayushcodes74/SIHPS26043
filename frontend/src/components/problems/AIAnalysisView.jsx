@@ -2,7 +2,8 @@ import { Card } from "../common/Cards";
 import { Badge } from "../common/Badges";
 import { Icon } from "../common/Icons";
 
-export function AIAnalysisView({ analysis, duplicateCheck = null, clusterCheck = null }) {
+export function AIAnalysisView({ analysis: propAnalysis, aiAnalysis, duplicateCheck = null, clusterCheck = null }) {
+  const analysis = propAnalysis || aiAnalysis;
   if (!analysis) return null;
 
   const confidencePercent = analysis.confidence
@@ -142,32 +143,38 @@ export function AIAnalysisView({ analysis, duplicateCheck = null, clusterCheck =
           </div>
         </div>
 
-        {/* Problem Summary */}
+        {/* AI-Generated Problem Description & Assessment */}
         <div style={{ marginBottom: "1.25rem" }}>
           <div
             style={{
               fontSize: "0.78rem",
               fontWeight: 700,
-              color: "var(--text-muted)",
+              color: "var(--color-primary)",
               textTransform: "uppercase",
               letterSpacing: "0.04em",
               marginBottom: "0.4rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.4rem",
             }}
           >
-            Synthesized Summary
+            <Icon name="cpu" size={14} color="var(--color-primary)" />
+            <span>AI-Synthesized Problem Description & Intelligence</span>
           </div>
           <p
             style={{
-              fontSize: "0.9rem",
-              lineHeight: 1.6,
-              color: "var(--text-secondary)",
+              fontSize: "0.92rem",
+              lineHeight: 1.65,
+              color: "var(--text-primary)",
               margin: 0,
               backgroundColor: "var(--bg-muted)",
-              padding: "0.85rem 1rem",
+              padding: "0.95rem 1.1rem",
               borderRadius: "var(--radius-md)",
+              border: "1px solid var(--border-color)",
+              whiteSpace: "pre-wrap",
             }}
           >
-            {analysis.summary || "Problem statement processed and indexed."}
+            {analysis.ai_description || analysis.summary || "Problem statement processed and classified by autonomous NLP intelligence."}
           </p>
         </div>
 

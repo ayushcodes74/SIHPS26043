@@ -34,14 +34,16 @@ function parseIntParam(value, name, min, max) {
     return n;
 }
 
+const { parseProblemId } = require("../utils/validation");
+
 // ---------------------------------------------------------------------------
 // POST /api/problems/:id/solutions
 // ---------------------------------------------------------------------------
 
 async function createSolution(req, res) {
-    const problemId = parseInt(req.params.id, 10);
+    const problemId = parseProblemId(req.params.id);
 
-    if (isNaN(problemId)) {
+    if (!problemId) {
         return res.status(400).json({ message: "Invalid problem id" });
     }
 
@@ -82,9 +84,9 @@ async function createSolution(req, res) {
 // ---------------------------------------------------------------------------
 
 async function getSolutions(req, res) {
-    const problemId = parseInt(req.params.id, 10);
+    const problemId = parseProblemId(req.params.id);
 
-    if (isNaN(problemId)) {
+    if (!problemId) {
         return res.status(400).json({ message: "Invalid problem id" });
     }
 

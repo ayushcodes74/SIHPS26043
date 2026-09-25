@@ -36,7 +36,7 @@ export function ExpertiseMatchingView({
         const found = teams.find((t) => t.status === "FORMING" || t.status === "ACTIVE");
         if (found) setActiveTeamId(found.id);
       })
-      .catch(() => {});
+      .catch(() => { });
   }
 
   const handleConnect = async (userId, name, userRole) => {
@@ -207,8 +207,8 @@ export function ExpertiseMatchingView({
                   score >= 80
                     ? "4px solid var(--color-secondary)"
                     : score >= 50
-                    ? "4px solid var(--color-primary)"
-                    : "4px solid var(--border-color)",
+                      ? "4px solid var(--color-primary)"
+                      : "4px solid var(--border-color)",
               }}
             >
               {/* Card Header: Name, Score & Badges */}
@@ -268,8 +268,8 @@ export function ExpertiseMatchingView({
                     {isConnected
                       ? "Invited"
                       : activeTeamId
-                      ? "Invite to Team"
-                      : "Create Team & Invite"}
+                        ? "Invite to Team"
+                        : "Create Team & Invite"}
                   </Button>
                 </div>
               </div>

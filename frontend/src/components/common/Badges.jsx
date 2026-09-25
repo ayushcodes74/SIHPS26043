@@ -60,8 +60,10 @@ export function StatusBadge({ status, className = "" }) {
       case "APPROVED":
       case "RESOLVED":
       case "COMPLETED":
+      case "CLOSED":
         return "success";
       case "ASSIGNED":
+      case "EXECUTION_SUBMITTED":
       case "PILOT":
       case "PILOT_READY":
         return "primary";

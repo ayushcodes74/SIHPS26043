@@ -16,28 +16,29 @@ import { AdminSection } from "../../components/dashboard/AdminSection";
 export function DashboardPage() {
   const { user, role } = useAuth();
   const { navigate } = useRouter();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  const isHi = language === "hi";
 
   const getRoleDescription = () => {
     switch (role) {
       case "CITIZEN":
-        return "Civic Engagement & Ground-Truth Verification Hub";
+        return isHi ? "नागरिक सहभागिता और जमीनी सत्यापन केंद्र" : "Civic Engagement & Ground-Truth Verification Hub";
       case "STUDENT":
-        return "Discover societal challenges and contribute solutions.";
+        return isHi ? "सामाजिक चुनौतियों की खोज करें और समाधान प्रस्तावित करें।" : "Discover societal challenges and contribute solutions.";
       case "RESEARCHER":
-        return "Applied Scientific Research & Root Cause Investigation Hub";
+        return isHi ? "अनुप्रयुक्त वैज्ञानिक अनुसंधान और मूल कारण जांच केंद्र" : "Applied Scientific Research & Root Cause Investigation Hub";
       case "UNIVERSITY":
-        return "Institutional Participation & Departmental Mobilization Hub";
+        return isHi ? "संस्थागत भागीदारी और विभागीय सहयोग केंद्र" : "Institutional Participation & Departmental Mobilization Hub";
       case "STARTUP":
-        return "Innovation Deployment & Pilot Scaling Hub";
+        return isHi ? "नवाचार परिनियोजन और पायलट स्केलिंग केंद्र" : "Innovation Deployment & Pilot Scaling Hub";
       case "MSME":
-        return "Technical Engineering & Local Implementation Hub";
+        return isHi ? "तकनीकी इंजीनियरिंग और स्थानीय कार्यान्वयन केंद्र" : "Technical Engineering & Local Implementation Hub";
       case "AUTHORITY":
-        return "Municipal Command Center & Statutory Directive Oversight";
+        return isHi ? "नगरपालिका कमांड सेंटर और वैधानिक निर्देश निगरानी" : "Municipal Command Center & Statutory Directive Oversight";
       case "ADMIN":
-        return "System Governance & Multi-Role Platform Oversight";
+        return isHi ? "प्रणाली शासन और बहु-भूमिका मंच निरीक्षण" : "System Governance & Multi-Role Platform Oversight";
       default:
-        return "Civic Intelligence Platform";
+        return isHi ? "नागरिक आसूचना मंच" : "Civic Intelligence Platform";
     }
   };
 
@@ -79,7 +80,7 @@ export function DashboardPage() {
       >
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: role === "CITIZEN" ? 0 : "0.35rem" }}>
-            <h1 style={{ margin: 0, fontSize: "1.75rem", fontWeight: 800, letterSpacing: "-0.02em" }}>
+            <h1 style={{ margin: 0, fontSize: "2rem", fontWeight: 500, fontFamily: "var(--font-serif)", letterSpacing: "-0.025em" }}>
               {t("dashboard.welcome")}, {user?.name || "Civic Leader"}
             </h1>
             <StatusBadge status={role} />

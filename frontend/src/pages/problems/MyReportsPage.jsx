@@ -59,12 +59,13 @@ export function MyReportsPage() {
       "SOLUTION_SEARCH",
       "SOLUTION_EVALUATION",
       "APPROVED",
+      "EXECUTION_SUBMITTED",
       "PILOT",
       "IMPLEMENTING",
       "IN_PROGRESS",
     ].includes(p.status)
   ).length;
-  const resolvedCount = reports.filter((p) => p.status === "RESOLVED").length;
+  const resolvedCount = reports.filter((p) => ["RESOLVED", "CLOSED"].includes(p.status)).length;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.75rem" }}>

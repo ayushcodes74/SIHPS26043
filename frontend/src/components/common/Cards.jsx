@@ -13,7 +13,7 @@ export function Card({
   return (
     <div
       className={`cs-card ${hover ? "cs-card-hover" : ""} ${className}`}
-      style={{ padding, border: "none", boxShadow: "var(--shadow-sm)" }}
+      style={{ padding }}
       {...props}
     >
       {(title || subtitle || actions) && (
@@ -29,7 +29,7 @@ export function Card({
         >
           <div>
             {title && (
-              <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: 800, letterSpacing: "-0.01em", color: "var(--text-primary)" }}>
+              <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 600, fontFamily: "var(--font-serif)", letterSpacing: "-0.015em", color: "var(--text-primary)" }}>
                 {title}
               </h3>
             )}
@@ -73,23 +73,24 @@ export function StatCard({
         flexDirection: "column",
         justifyContent: "center",
         border: "1px solid var(--border-color)",
+        backgroundColor: "var(--bg-card)",
         boxShadow: "var(--shadow-xs)",
-        backgroundColor: "#ffffff",
+        padding: "1.25rem 1.4rem",
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
-          <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.25rem" }}>
+          <div style={{ fontSize: "0.8rem", fontWeight: 500, color: "var(--text-muted)", marginBottom: "0.35rem" }}>
             {title}
           </div>
-          <div style={{ fontSize: "2rem", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.03em" }}>
+          <div style={{ fontSize: "2rem", fontWeight: 600, fontFamily: "var(--font-serif)", color: "var(--text-primary)", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
             {value ?? "0"}
           </div>
         </div>
         {icon && (
           <div
             style={{
-              padding: "0.75rem",
+              padding: "0.65rem",
               borderRadius: "var(--radius-full)",
               backgroundColor: "var(--color-primary-subtle)",
               color: iconColor,
@@ -98,13 +99,13 @@ export function StatCard({
               justifyContent: "center",
             }}
           >
-            <Icon name={icon} size={22} />
+            <Icon name={icon} size={20} />
           </div>
         )}
       </div>
 
       {(subtitle || trend) && (
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.5rem", fontSize: "0.8rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.6rem", fontSize: "0.8rem" }}>
           {trend && (
             <span
               style={{

@@ -9,6 +9,7 @@ import { solutionApi, problemApi, implementationApi } from "../../services/api";
 import { useAuth } from "../../context/useAuth.js";
 import { getFileUrl } from "../../services/apiClient.js";
 import { useToast } from "../../context/useToast.js";
+import { useTranslation } from "../../context/useTranslation.js";
 
 const SUBMISSION_ALLOWED_ROLES = ["STUDENT", "RESEARCHER", "STARTUP", "MSME", "UNIVERSITY"];
 const EVALUATION_ALLOWED_ROLES = ["AUTHORITY", "ADMIN"];
@@ -22,9 +23,11 @@ const EVALUATION_DIMENSIONS = [
   { key: "risk_score", label: "Risk Mitigation", weight: "10% (x2)", desc: "Environmental, socio-political, and operational contingency buffers" },
 ];
 
-export function SolutionsView({ problemId }) {
+export function SolutionsView({ problemId, problem, onProblemUpdated }) {
   const { role, user } = useAuth();
   const toast = useToast();
+  const { language } = useTranslation();
+  const isHi = language === "hi";
 
   const [activeTab, setActiveTab] = useState("all"); // "all" | "ranked"
   const [loading, setLoading] = useState(true);
@@ -57,19 +60,19 @@ export function SolutionsView({ problemId }) {
       setSelectedFile(null);
       return;
     }
-    
+
     // Check size (25MB max)
     if (file.size > 25 * 1024 * 1024) {
       toast.error("File size exceeds 25MB limit");
       return;
     }
-    
+
     const allowedTypes = ["application/pdf", "application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation"];
     if (!allowedTypes.includes(file.type) && !file.name.endsWith(".pdf") && !file.name.endsWith(".ppt") && !file.name.endsWith(".pptx")) {
       toast.error("Only PDF, PPT, and PPTX files are supported");
       return;
     }
-    
+
     setSelectedFile(file);
   };
 
@@ -94,6 +97,101 @@ export function SolutionsView({ problemId }) {
   const [targetStatus, setTargetStatus] = useState("UNDER_EVALUATION");
   const [submittingStatus, setSubmittingStatus] = useState(false);
 
+  // Select Solution & Hand Over to MSMEs/Startups Modal (Authority / Admin)
+  const [selectModalOpen, setSelectModalOpen] = useState(false);
+  const [selectedSolutionForHandover, setSelectedSolutionForHandover] = useState(null);
+  const [handoverForm, setHandoverForm] = useState({
+    partnerType: "ALL_STARTUPS_MSMES",
+    selectedPartnerId: "",
+    budgetAllocated: "180000",
+    pilotTimelineDays: "45",
+    handoverNotes: "",
+  });
+  const [submittingHandover, setSubmittingHandover] = useState(false);
+
+  // MSME & Startup Multi-Media Upload State (Max 5 Images, Max 2 Videos)
+  const [uploadedImages, setUploadedImages] = useState([]);
+  const [uploadedVideos, setUploadedVideos] = useState([]);
+
+  // Enterprise Proof & Media Submission Modal (Startups / MSMEs)
+  const [adoptModalOpen, setAdoptModalOpen] = useState(false);
+  const [selectedSolutionForAdopt, setSelectedSolutionForAdopt] = useState(null);
+  const [adoptNotes, setAdoptNotes] = useState("");
+  const [adoptImages, setAdoptImages] = useState([]);
+  const [adoptVideos, setAdoptVideos] = useState([]);
+  const [submittingAdopt, setSubmittingAdopt] = useState(false);
+
+  // Full Media Preview Lightbox Modal
+  const [previewMediaModal, setPreviewMediaModal] = useState({ open: false, url: "", type: "image", title: "" });
+
+  // Authority Close Problem Modal
+  const [closeModalOpen, setCloseModalOpen] = useState(false);
+  const [selectedSolutionForClose, setSelectedSolutionForClose] = useState(null);
+  const [closureNote, setClosureNote] = useState("Field verification completed. MSME deliverables and execution proofs inspected on site. Problem officially closed and resolved.");
+  const [submittingClose, setSubmittingClose] = useState(false);
+
+  const handleImagesUpload = (e, isAdopt = false) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    const currentList = isAdopt ? adoptImages : uploadedImages;
+    const setList = isAdopt ? setAdoptImages : setUploadedImages;
+
+    if (currentList.length + files.length > 5) {
+      toast.error(isHi ? "अधिकतम 5 छवियां ही अपलोड की जा सकती हैं" : "Maximum of 5 images can be uploaded");
+      return;
+    }
+    files.forEach((file) => {
+      if (!file.type.startsWith("image/")) {
+        toast.error(`${file.name} is not an image`);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        setList((prev) => {
+          if (prev.length >= 5) return prev;
+          return [...prev, { name: file.name, size: file.size, type: file.type, data: evt.target.result }];
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleVideosUpload = (e, isAdopt = false) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    const currentList = isAdopt ? adoptVideos : uploadedVideos;
+    const setList = isAdopt ? setAdoptVideos : setUploadedVideos;
+
+    if (currentList.length + files.length > 2) {
+      toast.error(isHi ? "अधिकतम 2 वीडियो ही अपलोड किए जा सकते हैं" : "Maximum of 2 videos can be uploaded");
+      return;
+    }
+    files.forEach((file) => {
+      if (!file.type.startsWith("video/") && !file.name.endsWith(".mp4") && !file.name.endsWith(".webm") && !file.name.endsWith(".mov")) {
+        toast.error(`${file.name} is not a supported video file (MP4, WEBM, MOV)`);
+        return;
+      }
+      if (file.size > 25 * 1024 * 1024) {
+        toast.error(`Video ${file.name} exceeds 25MB limit`);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        setList((prev) => {
+          if (prev.length >= 2) return prev;
+          return [...prev, { name: file.name, size: file.size, type: file.type, data: evt.target.result }];
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Registered demo Startups and MSMEs for assignment
+  const availablePartners = [
+    { id: 4, name: "AquaTech Solutions", type: "STARTUP", specialty: "IoT Sensor Monitoring & Hydro-Engineering" },
+    { id: 5, name: "EcoFilter Works", type: "MSME", specialty: "Modular Water Filtration & Civic Infrastructure Fabrication" },
+  ];
+
   const canSubmit = SUBMISSION_ALLOWED_ROLES.includes(role);
   const canEvaluate = EVALUATION_ALLOWED_ROLES.includes(role);
 
@@ -116,8 +214,16 @@ export function SolutionsView({ problemId }) {
 
   useEffect(() => {
     let ignore = false;
+    setLoading(true);
+    setSolutions([]);
+    setRankedSolutions([]);
+    setError("");
+
     async function loadInitial() {
-      if (!problemId) return;
+      if (!problemId) {
+        setLoading(false);
+        return;
+      }
       try {
         const [allRes, rankRes] = await Promise.all([
           solutionApi.getSolutionsForProblem(problemId, { limit: 50 }).catch(() => ({ solutions: [] })),
@@ -184,18 +290,44 @@ export function SolutionsView({ problemId }) {
           reader.onerror = (err) => reject(err);
           reader.readAsDataURL(selectedFile);
         });
-        
+
         const base64Data = await base64Promise;
         setUploadProgress(50);
-        
+
         const uploadRes = await problemApi.uploadEvidence({
           fileName: selectedFile.name,
           fileType: selectedFile.type,
           fileData: base64Data
         });
-        
+
         uploadedUrl = uploadRes.file_url;
         setUploadProgress(100);
+      }
+
+      // Upload student solution attached images (up to 5)
+      const studentImages = [];
+      for (const img of uploadedImages) {
+        if (img.data) {
+          const res = await problemApi.uploadEvidence({
+            fileName: img.name,
+            fileType: img.type,
+            fileData: img.data,
+          });
+          studentImages.push(res.file_url);
+        }
+      }
+
+      // Upload student solution attached videos (up to 2)
+      const studentVideos = [];
+      for (const vid of uploadedVideos) {
+        if (vid.data) {
+          const res = await problemApi.uploadEvidence({
+            fileName: vid.name,
+            fileType: vid.type,
+            fileData: vid.data,
+          });
+          studentVideos.push(res.file_url);
+        }
       }
 
       await solutionApi.createSolution(problemId, {
@@ -210,6 +342,8 @@ export function SolutionsView({ problemId }) {
         required_resources: solutionForm.required_resources.trim() || undefined,
         risks: solutionForm.risks.trim() || undefined,
         evidence: uploadedUrl || undefined,
+        images: studentImages,
+        videos: studentVideos,
       });
       toast.success("Solution submitted successfully for municipal evaluation");
       setSubmitModalOpen(false);
@@ -227,6 +361,8 @@ export function SolutionsView({ problemId }) {
         evidence: "",
       });
       setSelectedFile(null);
+      setUploadedImages([]);
+      setUploadedVideos([]);
       setUploadProgress(0);
       refreshData();
     } catch (err) {
@@ -293,7 +429,8 @@ export function SolutionsView({ problemId }) {
     if (solution.status === "SUBMITTED") setTargetStatus("UNDER_EVALUATION");
     else if (solution.status === "UNDER_EVALUATION") setTargetStatus("EVALUATED");
     else if (solution.status === "EVALUATED") setTargetStatus("APPROVED");
-    else if (solution.status === "APPROVED") setTargetStatus("PILOT");
+    else if (solution.status === "APPROVED") setTargetStatus("EXECUTION_SUBMITTED");
+    else if (solution.status === "EXECUTION_SUBMITTED") setTargetStatus("CLOSED");
     else setTargetStatus(solution.status);
     setStatusModalOpen(true);
   };
@@ -307,13 +444,224 @@ export function SolutionsView({ problemId }) {
       await solutionApi.updateSolutionStatus(selectedSolutionForStatus.id, {
         status: targetStatus,
       });
+
+      if (targetStatus === "APPROVED") {
+        await problemApi.updateProblemStatus(problemId, {
+          status: "APPROVED",
+          note: `Solution #${selectedSolutionForStatus.id} status updated to APPROVED by Authority.`,
+        }).catch(err => console.warn("Problem status sync warning:", err));
+      } else if (targetStatus === "CLOSED") {
+        await problemApi.updateProblemStatus(problemId, {
+          status: "CLOSED",
+          note: `Problem and solution closed by Municipal Authority.`,
+        }).catch(err => console.warn("Problem status sync warning:", err));
+      }
+
+      setSolutions((prev) =>
+        prev.map((s) => (s.id === selectedSolutionForStatus.id ? { ...s, status: targetStatus } : s))
+      );
+
       toast.success(`Solution status updated to ${targetStatus}`);
       setStatusModalOpen(false);
       refreshData();
+      if (onProblemUpdated) onProblemUpdated();
     } catch (err) {
       toast.error(err.message || "Status update failed");
     } finally {
       setSubmittingStatus(false);
+    }
+  };
+
+  // Open Select Solution & Hand Over Modal
+  const handleOpenSelectSolution = (solution) => {
+    setSelectedSolutionForHandover(solution);
+    setHandoverForm({
+      partnerType: "ALL_STARTUPS_MSMES",
+      selectedPartnerId: "",
+      budgetAllocated: String(solution.estimated_cost || 180000),
+      pilotTimelineDays: "45",
+      handoverNotes: `Solution idea approved by Municipal Authority. Priority granted to registered Startups and MSMEs for field pilot execution.`,
+    });
+    setSelectModalOpen(true);
+  };
+
+  // Submit Solution Selection & Handover to MSMEs / Startups
+  const handleSubmitHandover = async (e) => {
+    e.preventDefault();
+    if (!selectedSolutionForHandover) return;
+    setSubmittingHandover(true);
+    try {
+      // 1. Advance solution status to APPROVED
+      await solutionApi.updateSolutionStatus(selectedSolutionForHandover.id, {
+        status: "APPROVED",
+      });
+
+      // 2. Advance parent problem status to APPROVED
+      await problemApi.updateProblemStatus(problemId, {
+        status: "APPROVED",
+        note: `Student solution idea "${selectedSolutionForHandover.title}" verified and selected by Municipal Authority. Transferred to MSMEs & Startups for pilot execution.`,
+      }).catch((err) => console.warn("Problem status sync notice:", err));
+
+      // 3. Initiate pilot implementation project (non-fatal)
+      const partnerObj = availablePartners.find((p) => String(p.id) === String(handoverForm.selectedPartnerId));
+      const targetPartnerId = partnerObj ? partnerObj.id : null;
+      const partnerName = partnerObj ? `${partnerObj.name} (${partnerObj.type})` : "Open to Registered Startups & MSMEs";
+
+      await implementationApi.createImplementationForSolution(selectedSolutionForHandover.id, {
+        title: `Execution: ${selectedSolutionForHandover.title}`,
+        description: handoverForm.handoverNotes || `Municipal Pilot Project based on approved student solution idea #${selectedSolutionForHandover.id}`,
+        partner_id: targetPartnerId,
+        partner_name: partnerName,
+        budget_allocated: Number(handoverForm.budgetAllocated) || 0,
+        target_start_date: new Date().toISOString().split("T")[0],
+        target_end_date: new Date(Date.now() + (Number(handoverForm.pilotTimelineDays) || 45) * 24 * 3600 * 1000).toISOString().split("T")[0],
+        location_details: "Municipal jurisdiction field testing site",
+      }).catch((err) => {
+        console.warn("Implementation initiation notice:", err);
+      });
+
+      // Immediate optimistic update
+      setSolutions((prev) =>
+        prev.map((s) => (s.id === selectedSolutionForHandover.id ? { ...s, status: "APPROVED" } : s))
+      );
+
+      toast.success(
+        isHi
+          ? "छात्र समाधान विचार सत्यापित एवं चयनित! स्टार्टअप्स और एमएसएमई को सौंप दिया गया।"
+          : "Student solution idea verified & approved! Handed over to Startups & MSMEs."
+      );
+      setSelectModalOpen(false);
+      refreshData();
+      if (onProblemUpdated) onProblemUpdated();
+    } catch (err) {
+      toast.error(err.message || "Failed to select and hand over solution");
+    } finally {
+      setSubmittingHandover(false);
+    }
+  };
+
+  // Open MSME / Startup Deliverables & Proofs Upload Modal
+  const handleOpenAdopt = (solution) => {
+    setSelectedSolutionForAdopt(solution);
+    setAdoptNotes(`Field deployment initiated for "${solution.title}". Fabricated components installed and performance monitored.`);
+    setAdoptImages([]);
+    setAdoptVideos([]);
+    setAdoptModalOpen(true);
+  };
+
+  // Submit MSME / Startup Deliverables (max 5 images, max 2 videos)
+  const handleSubmitAdopt = async (e) => {
+    e.preventDefault();
+    if (!selectedSolutionForAdopt) return;
+    setSubmittingAdopt(true);
+    try {
+      // Upload execution images (max 5)
+      const uploadedImgUrls = [];
+      for (const img of adoptImages) {
+        if (img.data) {
+          const res = await problemApi.uploadEvidence({
+            fileName: img.name,
+            fileType: img.type,
+            fileData: img.data,
+          });
+          uploadedImgUrls.push(res.file_url);
+        }
+      }
+
+      // Upload execution videos (max 2)
+      const uploadedVidUrls = [];
+      for (const vid of adoptVideos) {
+        if (vid.data) {
+          const res = await problemApi.uploadEvidence({
+            fileName: vid.name,
+            fileType: vid.type,
+            fileData: vid.data,
+          });
+          uploadedVidUrls.push(res.file_url);
+        }
+      }
+
+      const executionData = {
+        partner_name: user?.name || "AquaTech Solutions (Startup)",
+        partner_type: role || "STARTUP",
+        notes: adoptNotes.trim() || "Field implementation executed with verified evidence deliverables.",
+        images: uploadedImgUrls,
+        videos: uploadedVidUrls,
+        created_at: new Date().toISOString(),
+      };
+
+      // 1. Advance problem status to EXECUTION_SUBMITTED
+      await problemApi.updateProblemStatus(problemId, {
+        status: "EXECUTION_SUBMITTED",
+        note: `Startup/MSME ${user?.name || "Partner"} uploaded execution deliverables (${uploadedImgUrls.length} images, ${uploadedVidUrls.length} videos). Ready for Municipal Authority closure.`,
+      }).catch((err) => console.warn("Problem status sync notice:", err));
+
+      // 2. Advance solution status to EXECUTION_SUBMITTED
+      await solutionApi.updateSolutionStatus(selectedSolutionForAdopt.id, {
+        status: "EXECUTION_SUBMITTED",
+      }).catch((err) => console.warn("Solution status sync notice:", err));
+
+      // 3. Optimistic local update
+      setSolutions((prev) =>
+        prev.map((s) =>
+          s.id === selectedSolutionForAdopt.id
+            ? { ...s, status: "EXECUTION_SUBMITTED", msme_execution: executionData }
+            : s
+        )
+      );
+
+      toast.success(
+        isHi
+          ? "कार्यान्वयन साक्ष्य सफलतापूर्वक अपलोड किए गए! नगर निगम प्राधिकरण अब समस्या को बंद कर सकता है।"
+          : "Execution proofs uploaded successfully! Municipal Authority can now review and close the problem."
+      );
+      setAdoptModalOpen(false);
+      refreshData();
+      if (onProblemUpdated) onProblemUpdated();
+    } catch (err) {
+      toast.error(err.message || "Failed to submit execution proofs");
+    } finally {
+      setSubmittingAdopt(false);
+    }
+  };
+
+  // Open Municipal Authority Close Problem Modal
+  const handleOpenCloseSolution = (solution) => {
+    setSelectedSolutionForClose(solution);
+    setClosureNote("Field verification completed. MSME deliverables and execution proofs inspected on site. Problem officially closed and resolved.");
+    setCloseModalOpen(true);
+  };
+
+  // Confirm Problem Closure by Authority
+  const handleConfirmClose = async (e) => {
+    e.preventDefault();
+    if (!selectedSolutionForClose) return;
+    setSubmittingClose(true);
+    try {
+      await solutionApi.updateSolutionStatus(selectedSolutionForClose.id, {
+        status: "CLOSED",
+      });
+      await problemApi.updateProblemStatus(problemId, {
+        status: "CLOSED",
+        note: closureNote.trim() || "Problem officially closed by Municipal Authority.",
+      }).catch((err) => console.warn("Problem status sync notice:", err));
+
+      setSolutions((prev) =>
+        prev.map((s) => (s.id === selectedSolutionForClose.id ? { ...s, status: "CLOSED" } : s))
+      );
+
+      toast.success(
+        isHi
+          ? "समस्या को नगर निगम प्राधिकरण द्वारा औपचारिक रूप से बंद कर दिया गया!"
+          : "Problem officially verified, resolved, and closed by Municipal Authority!"
+      );
+      setCloseModalOpen(false);
+      refreshData();
+      if (onProblemUpdated) onProblemUpdated();
+    } catch (err) {
+      toast.error(err.message || "Failed to close problem");
+    } finally {
+      setSubmittingClose(false);
     }
   };
 
@@ -324,6 +672,59 @@ export function SolutionsView({ problemId }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      {/* Pending Authority Problem Verification Alert */}
+      {(problem?.status === "REPORTED" || problem?.status === "UNDER_REVIEW") && (
+        <div
+          style={{
+            backgroundColor: "#fffbeb",
+            border: "1.5px solid #fde68a",
+            borderRadius: "var(--radius-lg)",
+            padding: "1rem 1.25rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem",
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <Icon name="alert-triangle" size={22} color="#b45309" />
+            <div>
+              <div style={{ fontWeight: 700, color: "#92400e", fontSize: "0.95rem" }}>
+                Problem Verification Pending
+              </div>
+              <div style={{ color: "#b45309", fontSize: "0.85rem" }}>
+                {canEvaluate
+                  ? "This problem must be verified by the Municipal Authority before student ideas can be officially selected and handed over to Startups/MSMEs."
+                  : "This civic problem was recently reported by a citizen. You can submit solution ideas; official Municipal verification and selection will proceed shortly."}
+              </div>
+            </div>
+          </div>
+          {canEvaluate && (
+            <Button
+              variant="primary"
+              size="sm"
+              icon="check-circle"
+              style={{ backgroundColor: "#15803d", borderColor: "#15803d", fontWeight: 700 }}
+              onClick={async () => {
+                try {
+                  await problemApi.updateProblemStatus(problemId, {
+                    status: "VERIFIED",
+                    note: "Problem verified by Municipal Authority. Confirmed jurisdiction and opened for student solution ideation.",
+                  });
+                  toast.success("Problem successfully verified by Municipal Authority!");
+                  if (onProblemUpdated) onProblemUpdated();
+                } catch (e) {
+                  toast.error(e.message || "Failed to verify problem");
+                }
+              }}
+            >
+              Verify Problem Now
+            </Button>
+          )}
+        </div>
+      )}
+
       {/* Header & Controls */}
       <div
         style={{
@@ -349,7 +750,7 @@ export function SolutionsView({ problemId }) {
                 color: "var(--text-muted)",
                 border: "1px solid var(--border-color)",
               }}
-            >              
+            >
             </span>
           </div>
           <p style={{ margin: "0.25rem 0 0", fontSize: "0.85rem", color: "var(--text-muted)" }}>
@@ -484,8 +885,8 @@ export function SolutionsView({ problemId }) {
             {activeTab === "ranked"
               ? "Municipal authorities evaluate submitted solutions across the 6 normalized dimensions to generate deterministic composite rankings."
               : ((role === "STUDENT" || role === "UNIVERSITY")
-                  ? "Propose your solution idea by uploading a document (PDF/PPT/PPTX). You don't need to provide a complete business plan." 
-                  : "Registered universities, research labs, student teams, and startups can submit technical proposals to solve this civic challenge.")}
+                ? "Propose your solution idea by uploading a document (PDF/PPT/PPTX). You don't need to provide a complete business plan."
+                : "Registered universities, research labs, student teams, and startups can submit technical proposals to solve this civic challenge.")}
           </p>
           {canSubmit && (
             <Button
@@ -554,14 +955,14 @@ export function SolutionsView({ problemId }) {
                               index === 0
                                 ? "rgba(234, 179, 8, 0.15)"
                                 : index === 1
-                                ? "rgba(148, 163, 184, 0.2)"
-                                : "rgba(180, 83, 9, 0.15)",
+                                  ? "rgba(148, 163, 184, 0.2)"
+                                  : "rgba(180, 83, 9, 0.15)",
                             color:
                               index === 0
                                 ? "#a16207"
                                 : index === 1
-                                ? "#475569"
-                                : "#9a3412",
+                                  ? "#475569"
+                                  : "#9a3412",
                           }}
                         >
                           #{index + 1} Ranked
@@ -576,6 +977,50 @@ export function SolutionsView({ problemId }) {
                     <h4 style={{ margin: "0.25rem 0 0", fontSize: "1.25rem", fontWeight: 800, letterSpacing: "-0.01em" }}>
                       {sol.title}
                     </h4>
+
+                    {/* Authority Selection & MSME/Startup Handover Banner */}
+                    {(sol.status === "APPROVED" || sol.status === "PILOT") && (
+                      <div
+                        style={{
+                          marginTop: "0.6rem",
+                          padding: "0.65rem 0.95rem",
+                          borderRadius: "var(--radius-md)",
+                          backgroundColor: "#f0fdf4",
+                          border: "1px solid #86efac",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          flexWrap: "wrap",
+                          gap: "0.5rem",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <span style={{ fontSize: "1.2rem" }}>🏛️</span>
+                          <div>
+                            <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "#166534" }}>
+                              {isHi ? "नगर निगम द्वारा चयनित — स्टार्टअप्स / एमएसएमई को सौंपा गया" : "Selected by Municipal Authority — Handed Over to MSMEs & Startups"}
+                            </div>
+                            <div style={{ fontSize: "0.75rem", color: "#15803d" }}>
+                              {isHi
+                                ? "पायलट प्रोटोटाइप, अनुबंध और धरातल पर परिनियोजन के लिए अनुमोदित।"
+                                : "Approved for prototyping, contracting, and pilot field deployment."}
+                            </div>
+                          </div>
+                        </div>
+
+                        {(role === "STARTUP" || role === "MSME") && (
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            icon="rocket"
+                            onClick={() => handleStartupAdopt(sol)}
+                            style={{ backgroundColor: "#15803d", borderColor: "#15803d" }}
+                          >
+                            {isHi ? "पायलट निष्पादन स्वीकार करें" : "Adopt & Execute Pilot"}
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Composite Score Pill if Evaluated */}
@@ -713,6 +1158,144 @@ export function SolutionsView({ problemId }) {
                   </div>
                 )}
 
+                {/* Student Innovation Proposal Attached Media (Images & Videos) */}
+                {((sol.images && sol.images.length > 0) || (sol.videos && sol.videos.length > 0)) && (
+                  <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "0.75rem" }}>
+                    <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.5rem", textTransform: "uppercase" }}>
+                      📸 Student Proposal Technical Media & Diagrams
+                    </div>
+                    {sol.images && sol.images.length > 0 && (
+                      <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap", marginBottom: "0.5rem" }}>
+                        {sol.images.map((imgUrl, i) => (
+                          <div
+                            key={i}
+                            onClick={() => setPreviewMediaModal({ open: true, url: imgUrl, type: "image", title: `Proposal Diagram ${i + 1}` })}
+                            style={{
+                              width: "72px",
+                              height: "72px",
+                              borderRadius: "var(--radius-md)",
+                              overflow: "hidden",
+                              border: "1px solid var(--border-color)",
+                              cursor: "pointer",
+                              boxShadow: "var(--shadow-xs)",
+                            }}
+                          >
+                            <img
+                              src={imgUrl.startsWith("http") ? imgUrl : `http://localhost:5000${imgUrl.startsWith("/") ? "" : "/"}${imgUrl}`}
+                              alt={`Diagram ${i + 1}`}
+                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {sol.videos && sol.videos.length > 0 && (
+                      <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+                        {sol.videos.map((vidUrl, vi) => (
+                          <video
+                            key={vi}
+                            controls
+                            src={vidUrl.startsWith("http") ? vidUrl : `http://localhost:5000${vidUrl.startsWith("/") ? "" : "/"}${vidUrl}`}
+                            style={{ maxHeight: "180px", maxWidth: "100%", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* MSME / Startup Field Execution & Deliverables Section */}
+                {(sol.msme_execution || sol.status === "EXECUTION_SUBMITTED" || sol.status === "CLOSED") && (
+                  <div
+                    style={{
+                      border: "1.5px solid #86efac",
+                      borderRadius: "var(--radius-lg)",
+                      padding: "1rem 1.25rem",
+                      backgroundColor: "#f0fdf4",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.75rem",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <span style={{ fontSize: "1.2rem" }}>🚀</span>
+                        <div style={{ fontWeight: 800, color: "#166534", fontSize: "0.95rem" }}>
+                          MSME & Startup Field Execution Deliverables
+                        </div>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: "0.75rem",
+                          fontWeight: 700,
+                          padding: "0.25rem 0.6rem",
+                          borderRadius: "var(--radius-full)",
+                          backgroundColor: "#dcfce7",
+                          color: "#15803d",
+                          border: "1px solid #86efac",
+                        }}
+                      >
+                        Executed by: {sol.msme_execution?.partner_name || "AquaTech Solutions (Startup)"}
+                      </span>
+                    </div>
+
+                    <div style={{ fontSize: "0.85rem", color: "#166534", lineHeight: 1.5 }}>
+                      {sol.msme_execution?.notes || "Physical pilot implementation and on-ground deployment completed with engineering telemetry and photo verification."}
+                    </div>
+
+                    {/* MSME Execution Photo Gallery (Max 5 Images) */}
+                    {sol.msme_execution?.images && sol.msme_execution.images.length > 0 && (
+                      <div>
+                        <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#166534", marginBottom: "0.4rem" }}>
+                          Field Execution Photos ({sol.msme_execution.images.length}/5)
+                        </div>
+                        <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
+                          {sol.msme_execution.images.map((imgUrl, mi) => (
+                            <div
+                              key={mi}
+                              onClick={() => setPreviewMediaModal({ open: true, url: imgUrl, type: "image", title: `Execution Proof Photo ${mi + 1}` })}
+                              style={{
+                                width: "80px",
+                                height: "80px",
+                                borderRadius: "var(--radius-md)",
+                                overflow: "hidden",
+                                border: "1.5px solid #86efac",
+                                cursor: "pointer",
+                                boxShadow: "var(--shadow-sm)",
+                              }}
+                            >
+                              <img
+                                src={imgUrl.startsWith("http") ? imgUrl : `http://localhost:5000${imgUrl.startsWith("/") ? "" : "/"}${imgUrl}`}
+                                alt={`Proof ${mi + 1}`}
+                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* MSME Execution Videos (Max 2 Videos) */}
+                    {sol.msme_execution?.videos && sol.msme_execution.videos.length > 0 && (
+                      <div>
+                        <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#166534", marginBottom: "0.4rem" }}>
+                          Field Verification Video Deliverables ({sol.msme_execution.videos.length}/2)
+                        </div>
+                        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+                          {sol.msme_execution.videos.map((vidUrl, mvi) => (
+                            <video
+                              key={mvi}
+                              controls
+                              src={vidUrl.startsWith("http") ? vidUrl : `http://localhost:5000${vidUrl.startsWith("/") ? "" : "/"}${vidUrl}`}
+                              style={{ maxHeight: "200px", maxWidth: "100%", borderRadius: "var(--radius-md)", border: "1px solid #86efac" }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Authority Evaluation Breakdown if present */}
                 {((sol.evaluations && sol.evaluations.length > 0) || sol.dimension_averages) && (
                   <div
@@ -771,11 +1354,71 @@ export function SolutionsView({ problemId }) {
                     style={{
                       display: "flex",
                       justifyContent: "flex-end",
+                      alignItems: "center",
                       gap: "0.75rem",
                       borderTop: "1px solid var(--border-color)",
                       paddingTop: "0.75rem",
+                      flexWrap: "wrap",
                     }}
                   >
+                    {sol.status !== "APPROVED" && sol.status !== "CLOSED" && sol.status !== "EXECUTION_SUBMITTED" && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        icon="award"
+                        onClick={() => handleOpenSelectSolution(sol)}
+                        style={{ backgroundColor: "#15803d", borderColor: "#15803d", fontWeight: 700 }}
+                      >
+                        {isHi ? "✓ छात्र समाधान सत्यापित एवं चयनित करें (स्टार्टअप्स को सौंपें)" : "✓ Verify & Select Student Idea (Hand Over to MSMEs/Startups)"}
+                      </Button>
+                    )}
+                    {(sol.status === "APPROVED" || sol.status === "EXECUTION_SUBMITTED") && (
+                      <>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "0.4rem",
+                            padding: "0.35rem 0.75rem",
+                            backgroundColor: "#dcfce7",
+                            color: "#15803d",
+                            borderRadius: "var(--radius-sm)",
+                            fontSize: "0.8rem",
+                            fontWeight: 700,
+                            border: "1px solid #86efac",
+                          }}
+                        >
+                          ✓ Selected by Authority • Handed to MSMEs/Startups
+                        </span>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          icon="check-circle"
+                          onClick={() => handleOpenCloseSolution(sol)}
+                          style={{ backgroundColor: "#059669", borderColor: "#059669", fontWeight: 700 }}
+                        >
+                          {isHi ? "🏁 समस्या बंद करें (सत्यापन पूर्ण)" : "🏁 Close Problem (Resolution Verified)"}
+                        </Button>
+                      </>
+                    )}
+                    {sol.status === "CLOSED" && (
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.4rem",
+                          padding: "0.35rem 0.75rem",
+                          backgroundColor: "#dcfce7",
+                          color: "#15803d",
+                          borderRadius: "var(--radius-sm)",
+                          fontSize: "0.8rem",
+                          fontWeight: 700,
+                          border: "1px solid #86efac",
+                        }}
+                      >
+                        🏁 Problem Officially Closed & Resolved
+                      </span>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
@@ -794,6 +1437,31 @@ export function SolutionsView({ problemId }) {
                     </Button>
                   </div>
                 )}
+
+                {/* Actions Bar for Startups / MSMEs if solution is approved */}
+                {(role === "STARTUP" || role === "MSME") && (sol.status === "APPROVED" || sol.status === "EXECUTION_SUBMITTED") && (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      alignItems: "center",
+                      gap: "0.75rem",
+                      borderTop: "1px solid var(--border-color)",
+                      paddingTop: "0.75rem",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      icon="rocket"
+                      onClick={() => handleOpenAdopt(sol)}
+                      style={{ backgroundColor: "#15803d", borderColor: "#15803d", fontWeight: 700 }}
+                    >
+                      {isHi ? "🚀 निष्पादन साक्ष्य व मीडिया अपलोड करें (अधिकतम 5 चित्र, 2 वीडियो)" : "🚀 Upload Execution Proofs & Media (Max 5 Images, 2 Videos)"}
+                    </Button>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -804,12 +1472,12 @@ export function SolutionsView({ problemId }) {
       <Modal
         isOpen={submitModalOpen}
         onClose={() => setSubmitModalOpen(false)}
-        title="Submit Solution Proposal"
+        title={isHi ? "समाधान प्रस्ताव जमा करें" : "Submit Solution Proposal"}
       >
         <form onSubmit={handleSubmitSolution}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
-            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
-              Submitting as: <strong>{role}</strong>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.85rem" }}>
+            <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
+              {isHi ? "प्रस्तुतकर्ता भूमिका:" : "Submitting as:"} <strong>{role}</strong>
             </span>
             <button
               type="button"
@@ -818,44 +1486,62 @@ export function SolutionsView({ problemId }) {
                 background: "none",
                 border: "none",
                 color: "var(--color-primary)",
-                fontSize: "0.75rem",
+                fontSize: "0.8rem",
                 fontWeight: 600,
                 cursor: "pointer",
                 textDecoration: "underline",
               }}
             >
-              Fill Demo Scenario Data
+              {isHi ? "डेमो डेटा भरें" : "Fill Demo Scenario Data"}
             </button>
           </div>
 
-          <div className="cs-form-group">
-            <label className="cs-label">
-              Solution Title <span className="required">*</span>
+          <div className="cs-form-group" style={{ marginBottom: "1.25rem" }}>
+            <label className="cs-label" style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "0.45rem", display: "block" }}>
+              {isHi ? "समाधान का शीर्षक" : "Solution Title"} <span className="required">*</span>
             </label>
             <input
               type="text"
-              className="cs-input"
-              placeholder="e.g., Low-cost IoT-based water quality monitoring system"
+              className="cs-input cs-input-large"
+              placeholder={isHi ? "उदा. कम लागत वाली IoT आधारित जल गुणवत्ता निगरानी प्रणाली" : "e.g., Low-cost IoT-based water quality monitoring system"}
               value={solutionForm.title}
               onChange={(e) => setSolutionForm({ ...solutionForm, title: e.target.value })}
               required
+              style={{
+                width: "100%",
+                minHeight: "56px",
+                fontSize: "1.15rem",
+                padding: "1rem 1.25rem",
+                borderRadius: "14px",
+                boxSizing: "border-box",
+              }}
             />
           </div>
 
-          <div className="cs-form-group">
-            <label className="cs-label">
-              Solution Description <span className="required">*</span>
+          <div className="cs-form-group" style={{ marginBottom: "1.25rem" }}>
+            <label className="cs-label" style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "0.45rem", display: "block" }}>
+              {isHi ? "समाधान का विस्तृत विवरण" : "Solution Description & Working Concept"} <span className="required">*</span>
             </label>
             <textarea
-              className="cs-textarea"
-              rows={4}
-              placeholder="Explain your proposed solution, how it addresses the problem, and the main idea behind how it would work..."
+              className="cs-textarea cs-textarea-large"
+              rows={8}
+              placeholder={isHi ? "अपने प्रस्तावित समाधान की कार्यप्रणाली, तकनीकी दृष्टिकोण और यह समस्या का समाधान कैसे करता है, विस्तार से बताएं..." : "Explain your proposed technical methodology, engineering components, expected civic improvements, and deployment requirements..."}
               value={solutionForm.description}
               onChange={(e) => setSolutionForm({ ...solutionForm, description: e.target.value })}
               required
+              style={{
+                width: "100%",
+                minHeight: "200px",
+                fontSize: "1.05rem",
+                lineHeight: 1.65,
+                padding: "1.1rem 1.25rem",
+                borderRadius: "14px",
+                boxSizing: "border-box",
+                resize: "vertical",
+              }}
             />
           </div>
-          
+
           <div className="cs-form-group">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.25rem" }}>
               <label className="cs-label" style={{ margin: 0 }}>
@@ -875,7 +1561,7 @@ export function SolutionsView({ problemId }) {
             <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "0.5rem" }}>
               Upload your solution presentation or PDF. Accepted: PDF, PPT, PPTX (Max 25MB)
             </div>
-            
+
             <input
               type="file"
               accept=".pdf,.ppt,.pptx"
@@ -886,6 +1572,94 @@ export function SolutionsView({ problemId }) {
             {selectedFile && (
               <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
                 Selected: <strong>{selectedFile.name}</strong> ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
+              </div>
+            )}
+          </div>
+
+          {/* Technical Diagrams & Image Uploads (Max 5 Images) */}
+          <div className="cs-form-group">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.25rem" }}>
+              <label className="cs-label" style={{ margin: 0 }}>
+                Technical Diagrams & Photos (Max 5 Images)
+              </label>
+              <span style={{ fontSize: "0.75rem", color: uploadedImages.length >= 5 ? "var(--color-danger)" : "var(--text-muted)" }}>
+                {uploadedImages.length} / 5 images uploaded
+              </span>
+            </div>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => handleImagesUpload(e, false)}
+              disabled={uploadedImages.length >= 5}
+              style={{ display: "block", marginBottom: "0.5rem" }}
+            />
+            {uploadedImages.length > 0 && (
+              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.4rem" }}>
+                {uploadedImages.map((img, idx) => (
+                  <div key={idx} style={{ position: "relative", width: "64px", height: "64px", borderRadius: "var(--radius-sm)", overflow: "hidden", border: "1px solid var(--border-color)" }}>
+                    <img src={img.data} alt="preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <button
+                      type="button"
+                      onClick={() => setUploadedImages((prev) => prev.filter((_, i) => i !== idx))}
+                      style={{
+                        position: "absolute",
+                        top: 2,
+                        right: 2,
+                        width: "18px",
+                        height: "18px",
+                        borderRadius: "50%",
+                        backgroundColor: "rgba(0,0,0,0.65)",
+                        color: "#fff",
+                        border: "none",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "11px",
+                        lineHeight: 1,
+                      }}
+                    >
+                      &times;
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Prototype Demonstration Videos (Max 2 Videos) */}
+          <div className="cs-form-group">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.25rem" }}>
+              <label className="cs-label" style={{ margin: 0 }}>
+                Prototype Demonstration Videos (Max 2 Videos)
+              </label>
+              <span style={{ fontSize: "0.75rem", color: uploadedVideos.length >= 2 ? "var(--color-danger)" : "var(--text-muted)" }}>
+                {uploadedVideos.length} / 2 videos uploaded
+              </span>
+            </div>
+            <input
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime"
+              multiple
+              onChange={(e) => handleVideosUpload(e, false)}
+              disabled={uploadedVideos.length >= 2}
+              style={{ display: "block", marginBottom: "0.5rem" }}
+            />
+            {uploadedVideos.length > 0 && (
+              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.4rem" }}>
+                {uploadedVideos.map((vid, vIdx) => (
+                  <div key={vIdx} style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.3rem 0.6rem", borderRadius: "var(--radius-sm)", backgroundColor: "var(--bg-muted)", fontSize: "0.75rem" }}>
+                    <span>🎥 {vid.name} ({(vid.size / (1024 * 1024)).toFixed(1)}MB)</span>
+                    <button
+                      type="button"
+                      onClick={() => setUploadedVideos((prev) => prev.filter((_, i) => i !== vIdx))}
+                      style={{ background: "none", border: "none", color: "var(--color-danger)", cursor: "pointer", fontWeight: 800 }}
+                    >
+                      &times;
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -1127,8 +1901,9 @@ export function SolutionsView({ problemId }) {
               <option value="SUBMITTED">SUBMITTED</option>
               <option value="UNDER_EVALUATION">UNDER_EVALUATION</option>
               <option value="EVALUATED">EVALUATED</option>
-              <option value="APPROVED">APPROVED</option>
-              <option value="PILOT">PILOT</option>
+              <option value="APPROVED">APPROVED (Selected by Authority & Handed Over)</option>
+              <option value="EXECUTION_SUBMITTED">EXECUTION_SUBMITTED (MSME Proofs Submitted)</option>
+              <option value="CLOSED">CLOSED (Closed & Resolved by Authority)</option>
               <option value="REJECTED">REJECTED</option>
             </select>
           </div>
@@ -1148,6 +1923,380 @@ export function SolutionsView({ problemId }) {
           </div>
         </form>
       </Modal>
+
+      {/* Select Solution Idea & Hand Over to MSMEs/Startups Modal */}
+      <Modal
+        isOpen={selectModalOpen}
+        onClose={() => setSelectModalOpen(false)}
+        title={isHi ? "छात्र समाधान विचार सत्यापन एवं चयन (स्टार्टअप्स को हस्तांतरण)" : "Verify & Select Student Idea (Hand Over to MSMEs/Startups)"}
+      >
+        <form onSubmit={handleSubmitHandover}>
+          {selectedSolutionForHandover && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {/* Proposal Summary Box */}
+              <div
+                style={{
+                  padding: "0.85rem 1rem",
+                  borderRadius: "var(--radius-md)",
+                  backgroundColor: "var(--bg-muted)",
+                  border: "1px solid var(--border-color)",
+                }}
+              >
+                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
+                  Selected Student Innovation Proposal
+                </div>
+                <h4 style={{ margin: "0.25rem 0 0.35rem", fontSize: "1rem", color: "var(--text-primary)" }}>
+                  {selectedSolutionForHandover.title}
+                </h4>
+                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
+                  Proposed by: <strong>{selectedSolutionForHandover.submitter_name || "Student Innovator"}</strong> &bull; Estimated Cost: <strong>₹{Number(selectedSolutionForHandover.estimated_cost || 180000).toLocaleString("en-IN")}</strong>
+                </div>
+              </div>
+
+              {/* Handover Directive */}
+              <div
+                style={{
+                  padding: "0.75rem",
+                  borderRadius: "var(--radius-sm)",
+                  backgroundColor: "#f0fdf4",
+                  border: "1px solid #86efac",
+                  fontSize: "0.8rem",
+                  color: "#166534",
+                }}
+              >
+                ℹ️ Selecting this solution will automatically advance the parent problem to <strong>APPROVED/PILOT</strong> status and transition the project into the MSME & Startup execution pipeline.
+              </div>
+
+              {/* Partner Assignment Option */}
+              <div className="cs-form-group">
+                <label className="cs-label" style={{ fontWeight: 600, display: "block", marginBottom: "0.35rem" }}>
+                  Implementation Partner Assignment <span className="required">*</span>
+                </label>
+                <select
+                  className="cs-select"
+                  value={handoverForm.selectedPartnerId}
+                  onChange={(e) => setHandoverForm({ ...handoverForm, selectedPartnerId: e.target.value })}
+                  style={{ width: "100%", padding: "0.6rem", borderRadius: "var(--radius-md)" }}
+                >
+                  <option value="">Open to All Registered Startups & MSMEs (Competitive Expression of Interest)</option>
+                  {availablePartners.map((partner) => (
+                    <option key={partner.id} value={partner.id}>
+                      Direct Assign: {partner.name} ({partner.type}) — {partner.specialty}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Budget Allocation & Timeline */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                <div className="cs-form-group">
+                  <label className="cs-label" style={{ fontWeight: 600, display: "block", marginBottom: "0.35rem" }}>
+                    Allocated Pilot Budget (₹)
+                  </label>
+                  <input
+                    type="number"
+                    className="cs-input"
+                    value={handoverForm.budgetAllocated}
+                    onChange={(e) => setHandoverForm({ ...handoverForm, budgetAllocated: e.target.value })}
+                    style={{ width: "100%", padding: "0.6rem", borderRadius: "var(--radius-md)" }}
+                  />
+                </div>
+
+                <div className="cs-form-group">
+                  <label className="cs-label" style={{ fontWeight: 600, display: "block", marginBottom: "0.35rem" }}>
+                    Pilot Target Duration (Days)
+                  </label>
+                  <input
+                    type="number"
+                    className="cs-input"
+                    value={handoverForm.pilotTimelineDays}
+                    onChange={(e) => setHandoverForm({ ...handoverForm, pilotTimelineDays: e.target.value })}
+                    style={{ width: "100%", padding: "0.6rem", borderRadius: "var(--radius-md)" }}
+                  />
+                </div>
+              </div>
+
+              {/* Handover Directives / Notes */}
+              <div className="cs-form-group">
+                <label className="cs-label" style={{ fontWeight: 600, display: "block", marginBottom: "0.35rem" }}>
+                  Municipal Directives & Technical Scope
+                </label>
+                <textarea
+                  className="cs-textarea"
+                  rows={2}
+                  value={handoverForm.handoverNotes}
+                  onChange={(e) => setHandoverForm({ ...handoverForm, handoverNotes: e.target.value })}
+                  placeholder="e.g., Fabricate modular skid units, install telemetry flow meters, and conduct 30-day baseline testing."
+                  style={{ width: "100%", padding: "0.6rem", borderRadius: "var(--radius-md)" }}
+                />
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "0.5rem" }}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setSelectModalOpen(false)}
+                  disabled={submittingHandover}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  loading={submittingHandover}
+                  style={{ backgroundColor: "#15803d", borderColor: "#15803d" }}
+                >
+                  Confirm Selection & Hand Over
+                </Button>
+              </div>
+            </div>
+          )}
+        </form>
+      </Modal>
+
+      {/* Enterprise Proof & Media Submission Modal (Startups / MSMEs) */}
+      <Modal
+        isOpen={adoptModalOpen}
+        onClose={() => setAdoptModalOpen(false)}
+        title={isHi ? "स्टार्टअप / एमएसएमई निष्पादन साक्ष्य एवं मीडिया अपलोड" : "Upload Enterprise Execution Proofs & Media"}
+      >
+        <form onSubmit={handleSubmitAdopt}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div
+              style={{
+                padding: "0.85rem",
+                borderRadius: "var(--radius-md)",
+                backgroundColor: "#f0fdf4",
+                border: "1px solid #86efac",
+                fontSize: "0.85rem",
+                color: "#166534",
+              }}
+            >
+              🚀 <strong>Field Execution Deliverables:</strong> Upload up to 5 photos and up to 2 videos demonstrating on-ground fabrication, installation, or baseline operational testing.
+            </div>
+
+            {selectedSolutionForAdopt && (
+              <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                Executing Solution Idea: <strong>{selectedSolutionForAdopt.title}</strong>
+              </div>
+            )}
+
+            <div className="cs-form-group">
+              <label className="cs-label" style={{ fontWeight: 600, display: "block", marginBottom: "0.35rem" }}>
+                Execution Directives, Methodology & Deployment Details <span className="required">*</span>
+              </label>
+              <textarea
+                className="cs-textarea"
+                rows={3}
+                required
+                value={adoptNotes}
+                onChange={(e) => setAdoptNotes(e.target.value)}
+                placeholder="Explain the on-ground execution details, telemetry metrics, and deliverables completed..."
+                style={{ width: "100%", padding: "0.6rem", borderRadius: "var(--radius-md)" }}
+              />
+            </div>
+
+            {/* Images Upload (Max 5) */}
+            <div className="cs-form-group">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.3rem" }}>
+                <label className="cs-label" style={{ margin: 0, fontWeight: 600 }}>
+                  Field Execution Photos (Max 5 Images)
+                </label>
+                <span style={{ fontSize: "0.75rem", color: adoptImages.length >= 5 ? "var(--color-danger)" : "var(--text-muted)" }}>
+                  {adoptImages.length} / 5 images uploaded
+                </span>
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => handleImagesUpload(e, true)}
+                disabled={adoptImages.length >= 5}
+                style={{ display: "block", marginBottom: "0.4rem" }}
+              />
+              {adoptImages.length > 0 && (
+                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.3rem" }}>
+                  {adoptImages.map((img, idx) => (
+                    <div key={idx} style={{ position: "relative", width: "68px", height: "68px", borderRadius: "var(--radius-sm)", overflow: "hidden", border: "1px solid var(--border-color)" }}>
+                      <img src={img.data} alt="preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      <button
+                        type="button"
+                        onClick={() => setAdoptImages((prev) => prev.filter((_, i) => i !== idx))}
+                        style={{
+                          position: "absolute",
+                          top: 2,
+                          right: 2,
+                          width: "18px",
+                          height: "18px",
+                          borderRadius: "50%",
+                          backgroundColor: "rgba(0,0,0,0.65)",
+                          color: "#fff",
+                          border: "none",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "11px",
+                          lineHeight: 1,
+                        }}
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Videos Upload (Max 2) */}
+            <div className="cs-form-group">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.3rem" }}>
+                <label className="cs-label" style={{ margin: 0, fontWeight: 600 }}>
+                  Field Verification Videos (Max 2 Videos)
+                </label>
+                <span style={{ fontSize: "0.75rem", color: adoptVideos.length >= 2 ? "var(--color-danger)" : "var(--text-muted)" }}>
+                  {adoptVideos.length} / 2 videos uploaded
+                </span>
+              </div>
+              <input
+                type="file"
+                accept="video/mp4,video/webm,video/quicktime"
+                multiple
+                onChange={(e) => handleVideosUpload(e, true)}
+                disabled={adoptVideos.length >= 2}
+                style={{ display: "block", marginBottom: "0.4rem" }}
+              />
+              {adoptVideos.length > 0 && (
+                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.3rem" }}>
+                  {adoptVideos.map((vid, vIdx) => (
+                    <div key={vIdx} style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.35rem 0.6rem", borderRadius: "var(--radius-sm)", backgroundColor: "var(--bg-muted)", fontSize: "0.75rem" }}>
+                      <span>🎥 {vid.name} ({(vid.size / (1024 * 1024)).toFixed(1)}MB)</span>
+                      <button
+                        type="button"
+                        onClick={() => setAdoptVideos((prev) => prev.filter((_, i) => i !== vIdx))}
+                        style={{ background: "none", border: "none", color: "var(--color-danger)", cursor: "pointer", fontWeight: 800 }}
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "0.5rem" }}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setAdoptModalOpen(false)}
+                disabled={submittingAdopt}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                loading={submittingAdopt}
+                style={{ backgroundColor: "#15803d", borderColor: "#15803d" }}
+              >
+                Submit Execution Deliverables
+              </Button>
+            </div>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Municipal Authority Close Problem Modal */}
+      <Modal
+        isOpen={closeModalOpen}
+        onClose={() => setCloseModalOpen(false)}
+        title={isHi ? "समस्या समाधान सत्यापन एवं औपचारिक समापन" : "Municipal Resolution Verification & Problem Closure"}
+      >
+        <form onSubmit={handleConfirmClose}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div
+              style={{
+                padding: "0.85rem",
+                borderRadius: "var(--radius-md)",
+                backgroundColor: "#f0fdf4",
+                border: "1px solid #86efac",
+                fontSize: "0.85rem",
+                color: "#166534",
+              }}
+            >
+              🏁 <strong>Official Problem Closure:</strong> Municipal Authority verifies that on-ground implementation deliverables by registered Startups/MSMEs are complete, and closes the problem ticket.
+            </div>
+
+            {selectedSolutionForClose && (
+              <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                <div>Selected Solution: <strong>{selectedSolutionForClose.title}</strong></div>
+                {selectedSolutionForClose.msme_execution && (
+                  <div>Partner Execution: <strong>{selectedSolutionForClose.msme_execution.partner_name}</strong> ({selectedSolutionForClose.msme_execution.images?.length || 0} photos, {selectedSolutionForClose.msme_execution.videos?.length || 0} videos)</div>
+                )}
+              </div>
+            )}
+
+            <div className="cs-form-group">
+              <label className="cs-label" style={{ fontWeight: 600, display: "block", marginBottom: "0.4rem" }}>
+                Authority Verification Remarks & Closure Directive <span className="required">*</span>
+              </label>
+              <textarea
+                className="cs-textarea"
+                rows={3}
+                required
+                value={closureNote}
+                onChange={(e) => setClosureNote(e.target.value)}
+                style={{ width: "100%", padding: "0.6rem", borderRadius: "var(--radius-md)" }}
+              />
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "0.5rem" }}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCloseModalOpen(false)}
+                disabled={submittingClose}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                loading={submittingClose}
+                style={{ backgroundColor: "#059669", borderColor: "#059669" }}
+              >
+                Confirm Resolution & Close Problem
+              </Button>
+            </div>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Full Media Preview Lightbox Modal */}
+      {previewMediaModal.open && (
+        <Modal
+          isOpen={previewMediaModal.open}
+          onClose={() => setPreviewMediaModal({ open: false, url: "", type: "image", title: "" })}
+          title={previewMediaModal.title || "Media Preview"}
+        >
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "1rem" }}>
+            {previewMediaModal.type === "video" ? (
+              <video
+                controls
+                autoPlay
+                src={previewMediaModal.url.startsWith("http") ? previewMediaModal.url : `http://localhost:5000${previewMediaModal.url.startsWith("/") ? "" : "/"}${previewMediaModal.url}`}
+                style={{ maxWidth: "100%", maxHeight: "70vh", borderRadius: "var(--radius-md)" }}
+              />
+            ) : (
+              <img
+                src={previewMediaModal.url.startsWith("http") ? previewMediaModal.url : `http://localhost:5000${previewMediaModal.url.startsWith("/") ? "" : "/"}${previewMediaModal.url}`}
+                alt="preview"
+                style={{ maxWidth: "100%", maxHeight: "70vh", objectFit: "contain", borderRadius: "var(--radius-md)" }}
+              />
+            )}
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

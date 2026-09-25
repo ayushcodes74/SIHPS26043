@@ -6,11 +6,14 @@ import { StatusBadge } from "../common/Badges";
 import { Icon } from "../common/Icons";
 import { EmptyState, LoadingSkeleton } from "../common/Feedback";
 import { useRouter } from "../../context/useRouter";
+import { useTranslation } from "../../context/useTranslation";
 
 const RESEARCH_CATEGORIES = ["ENVIRONMENTAL", "INFRASTRUCTURE", "TECHNICAL", "BIOLOGICAL_HEALTH"];
 
 export function ResearcherSection() {
   const { navigate } = useRouter();
+  const { t, language } = useTranslation();
+  const isHi = language === "hi";
 
   const [loading, setLoading] = useState(true);
   const [researchProblems, setResearchProblems] = useState([]);
@@ -59,30 +62,30 @@ export function ResearcherSection() {
       {/* Researcher Metrics */}
       <div className="cs-grid-4">
         <StatCard
-          title="Research Challenges"
+          title={isHi ? "अनुसंधान चुनौतियाँ" : "Research Challenges"}
           value={loading ? "..." : String(researchProblems.length)}
-          subtitle="Empirical problems seeking investigation"
+          subtitle={isHi ? "जांच की आवश्यकता वाली अनुभवजन्य समस्याएं" : "Empirical problems seeking investigation"}
           icon="microscope"
           iconColor="var(--color-primary)"
         />
         <StatCard
-          title="Reputation Score"
+          title={isHi ? "प्रतिष्ठा स्कोर" : "Reputation Score"}
           value={loading ? "..." : String(reputation?.score || 0)}
-          subtitle={`Tier: ${reputation?.tier || "BRONZE"}`}
+          subtitle={isHi ? `श्रेणी: ${reputation?.tier || "कांस्य"}` : `Tier: ${reputation?.tier || "BRONZE"}`}
           icon="award"
           iconColor="var(--color-warning)"
         />
         <StatCard
-          title="Target Disciplines"
+          title={isHi ? "लक्षित विषय" : "Target Disciplines"}
           value={String(RESEARCH_CATEGORIES.length)}
-          subtitle="Environmental, Hydro, Biological"
+          subtitle={isHi ? "पर्यावरण, जल, जैविक" : "Environmental, Hydro, Biological"}
           icon="book-open"
           iconColor="var(--color-secondary)"
         />
         <StatCard
-          title="Peer Credentials"
+          title={isHi ? "सहकर्मी साख" : "Peer Credentials"}
           value={String(reputation?.badges?.length || 0)}
-          subtitle="Validated research contributions"
+          subtitle={isHi ? "सत्यापित अनुसंधान योगदान" : "Validated research contributions"}
           icon="shield-check"
           iconColor="var(--color-success)"
         />
@@ -117,21 +120,23 @@ export function ResearcherSection() {
         </div>
         <div>
           <h4 style={{ margin: "0 0 0.2rem", fontSize: "1rem", color: "var(--color-primary)" }}>
-            Apply Research Expertise to Real Societal Problems
+            {isHi ? "वास्तविक सामाजिक समस्याओं में अनुसंधान विशेषज्ञता लागू करें" : "Apply Research Expertise to Real Societal Problems"}
           </h4>
           <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-            Conduct Root Cause Analysis (RCA), attach lab reports and geo-surveys to empirical ledgers, and author peer-evaluated solutions.
+            {isHi
+              ? "मूल कारण विश्लेषण (RCA) करें, लैब रिपोर्ट और भू-सर्वेक्षण संलग्न करें, और सहकर्मी-मूल्यांकित समाधान प्रस्तुत करें।"
+              : "Conduct Root Cause Analysis (RCA), attach lab reports and geo-surveys to empirical ledgers, and author peer-evaluated solutions."}
           </p>
         </div>
       </div>
 
       {/* Research-Relevant Societal Problems */}
       <Card
-        title="Active Scientific & Empirical Challenges"
-        subtitle="Societal problems requiring domain analysis, hydrological testing, or technical solutions"
+        title={isHi ? "सक्रिय वैज्ञानिक और अनुभवजन्य चुनौतियाँ" : "Active Scientific & Empirical Challenges"}
+        subtitle={isHi ? "डोमेन विश्लेषण, जल परीक्षण या तकनीकी समाधान की आवश्यकता वाली सामाजिक समस्याएं" : "Societal problems requiring domain analysis, hydrological testing, or technical solutions"}
         actions={
           <Button variant="outline" size="sm" icon="search" onClick={() => navigate("/explore")}>
-            Explore All Problems
+            {isHi ? "सभी समस्याएं देखें" : "Explore All Problems"}
           </Button>
         }
       >
@@ -142,8 +147,8 @@ export function ResearcherSection() {
         ) : researchProblems.length === 0 ? (
           <EmptyState
             icon="microscope"
-            title="No research problems found"
-            description="All active cases are currently assigned or in non-technical categories."
+            title={isHi ? "कोई अनुसंधान समस्या नहीं मिली" : "No research problems found"}
+            description={isHi ? "सभी सक्रिय मामले वर्तमान में आवंटित हैं या गैर-तकनीकी श्रेणियों में हैं।" : "All active cases are currently assigned or in non-technical categories."}
           />
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
@@ -191,9 +196,8 @@ export function ResearcherSection() {
                       >
                         {prob.category}
                       </span>
-                      {/* PriorityBadge removed */}
                       <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                        #{prob.id} &bull; 📍 {prob.district || "District"}
+                        #{prob.id} &bull; 📍 {prob.district || (isHi ? "जिला" : "District")}
                       </span>
                     </div>
 
@@ -224,10 +228,10 @@ export function ResearcherSection() {
 
                   <div style={{ display: "flex", gap: "0.5rem" }}>
                     <Button variant="outline" size="sm" icon="layers">
-                      Inspect RCA
+                      {isHi ? "RCA जांचें" : "Inspect RCA"}
                     </Button>
                     <Button variant="primary" size="sm" icon="arrow-right">
-                      View Challenge
+                      {isHi ? "चुनौती देखें" : "View Challenge"}
                     </Button>
                   </div>
                 </div>

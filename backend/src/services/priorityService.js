@@ -6,7 +6,21 @@ function calculatePriority({
     daysUnresolved = 0,
     communitySupport = 0
 }) {
-    const severityScore = severity * 10;
+    let numSeverity = 5;
+    if (typeof severity === "number" && !isNaN(severity)) {
+        numSeverity = severity;
+    } else if (typeof severity === "string") {
+        const s = severity.toUpperCase().trim();
+        if (s === "CRITICAL") numSeverity = 9;
+        else if (s === "HIGH") numSeverity = 8;
+        else if (s === "MEDIUM") numSeverity = 6;
+        else if (s === "LOW") numSeverity = 4;
+        else {
+            const parsed = parseInt(s, 10);
+            if (!isNaN(parsed)) numSeverity = parsed;
+        }
+    }
+    const severityScore = Math.min(Math.max(numSeverity, 1), 10) * 10;
 
     const affectedScore = Math.min(
         affectedPeople / 100,

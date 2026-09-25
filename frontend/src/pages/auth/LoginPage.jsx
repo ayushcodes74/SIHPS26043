@@ -6,6 +6,7 @@ import { useAuth, DEMO_ACCOUNTS } from "../../context/useAuth.js";
 import { Link } from "../../context/RouterContext.jsx";
 import { useRouter } from "../../context/useRouter.js";
 import { useToast } from "../../context/useToast.js";
+import { useTranslation } from "../../context/useTranslation.js";
 
 // Google-style social button
 function SocialButton({ icon, children, onClick }) {
@@ -44,6 +45,9 @@ export function LoginPage() {
   const { login, demoSwitchRole } = useAuth();
   const { navigate } = useRouter();
   const toast = useToast();
+  const { language } = useTranslation();
+
+  const isHi = language === "hi";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -62,10 +66,10 @@ export function LoginPage() {
     setLoading(true);
     try {
       const user = await login(email, password);
-      toast.success(`Welcome back, ${user.name}!`);
+      toast.success(isHi ? `स्वागत है, ${user.name}!` : `Welcome back, ${user.name}!`);
       navigate("/dashboard");
     } catch (err) {
-      setError(err.message || "Invalid credentials. Please try again.");
+      setError(err.message || (isHi ? "अमान्य क्रेडेंशियल। पुनः प्रयास करें।" : "Invalid credentials. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -79,7 +83,7 @@ export function LoginPage() {
       toast.success(`Signed in as ${user.role} — ${user.name}`);
       navigate("/dashboard");
     } catch (err) {
-      setError(err.message || "Demo login failed.");
+      setError(err.message || (isHi ? "साइन इन विफल रहा।" : "Sign in failed."));
     } finally {
       setLoading(false);
     }
@@ -272,17 +276,31 @@ export function LoginPage() {
             />
 
             <div style={{ position: "relative" }}>
-              <Input
-                label="Password"
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.4rem" }}>
+                <label style={{ fontSize: "0.85rem", fontWeight: 500, color: "var(--text-primary)" }}>
+                  {isHi ? "पासवर्ड" : "Password"}
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--text-muted)",
+                    cursor: "pointer",
+                    fontSize: "0.75rem",
+                    fontWeight: 500,
+                  }}
+                >
+                  {showPassword ? (isHi ? "छुपाएं" : "Hide") : (isHi ? "दिखाएं" : "Show")}
+                </button>
+              </div>
+              <input
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
                 style={{
                   position: "absolute",
                   right: "12px",
@@ -296,16 +314,25 @@ export function LoginPage() {
                   fontFamily: "inherit",
                   padding: 0,
                 }}
-              >
-                {showPassword ? "Hide" : "Show"}
-              </button>
+              />
             </div>
 
-            <Button
+            <button
               type="submit"
-              variant="primary"
-              loading={loading}
-              style={{ width: "100%", marginTop: "0.5rem" }}
+              disabled={loading}
+              style={{
+                width: "100%",
+                padding: "0.85rem 1.25rem",
+                borderRadius: "12px",
+                backgroundColor: "var(--color-primary)",
+                color: "#FFFFFF",
+                border: "none",
+                fontSize: "0.95rem",
+                fontWeight: 600,
+                cursor: loading ? "wait" : "pointer",
+                marginTop: "0.25rem",
+                transition: "opacity 150ms ease",
+              }}
             >
               Sign In →
             </Button>

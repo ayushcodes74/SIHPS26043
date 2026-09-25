@@ -12,6 +12,10 @@ const {
 } = require("../controllers/problemController");
 
 const {
+    getProblemImplementations
+} = require("../controllers/implementationController");
+
+const {
     getProblemCluster,
     triggerClustering
 } = require("../controllers/clusteringController");
@@ -43,9 +47,6 @@ const {
     getRankedSolutions
 } = require("../controllers/solutionEvaluationController");
 
-const {
-    getProblemImplementations
-} = require("../controllers/implementationController");
 
 const {
     getProblemImpactSummaryHandler
@@ -360,6 +361,12 @@ router.get(
     "/:id/status-history",
     authenticate,
     getProblemStatusHistory
+);
+
+router.get(
+    "/:id/implementations",
+    authenticate,
+    getProblemImplementations
 );
 
 module.exports = router;

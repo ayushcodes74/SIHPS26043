@@ -8,12 +8,14 @@ import { ExpertiseMatchingView } from "../../components/problems/ExpertiseMatchi
 import { problemApi, challengeApi, matchingApi } from "../../services/api.js";
 import { useToast } from "../../context/useToast.js";
 import { useRouter } from "../../context/useRouter.js";
+import { useAuth } from "../../context/useAuth.js";
 import { useTranslation } from "../../context/useTranslation.js";
 import { INDIAN_STATES, INDIAN_STATES_AND_DISTRICTS } from "../../constants/indianLocations.js";
 
 export function ReportProblemPage() {
   const toast = useToast();
   const { navigate } = useRouter();
+  const { role } = useAuth();
   const { t, language } = useTranslation();
 
   // Form State (Citizen-first: Title, Description, Location, Evidence, Category)
@@ -497,6 +499,45 @@ export function ReportProblemPage() {
     { value: "Other", label: t("report.categories.other") },
   ];
 
+  if (["AUTHORITY", "STARTUP", "MSME"].includes(role)) {
+    return (
+      <div style={{ maxWidth: "680px", margin: "3rem auto", textAlign: "center" }}>
+        <Card style={{ padding: "3rem 2rem" }}>
+          <div
+            style={{
+              width: "56px",
+              height: "56px",
+              borderRadius: "var(--radius-full)",
+              backgroundColor: "var(--color-primary-subtle)",
+              color: "var(--color-primary)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 1.25rem",
+            }}
+          >
+            <Icon name="shield-check" size={28} />
+          </div>
+          <h2 style={{ fontSize: "1.35rem", fontWeight: 700, margin: "0 0 0.5rem" }}>
+            Citizen-First Civic Problem Reporting
+          </h2>
+          <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", lineHeight: 1.5, margin: "0 0 1.5rem" }}>
+            Problem reporting is reserved for Citizens to document ground-level civic challenges.
+            As an <strong>{role}</strong>, your role is to review community issues, evaluate and select the best solution ideas, and oversee or execute pilot implementations.
+          </p>
+          <div style={{ display: "flex", justifyContent: "center", gap: "0.75rem" }}>
+            <Button variant="primary" icon="arrow-left" onClick={() => navigate("/dashboard")}>
+              Return to Dashboard
+            </Button>
+            <Button variant="outline" icon="search" onClick={() => navigate("/explore")}>
+              Explore Problems
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div style={{ maxWidth: "860px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "1.75rem" }}>
       {/* Page Header */}
@@ -564,21 +605,32 @@ export function ReportProblemPage() {
                 onChange={handleChange}
                 required
                 hint={t("report.titleHint")}
+                className="cs-input-large"
+                style={{
+                  width: "100%",
+                  fontSize: "1.25rem",
+                  padding: "1.1rem 1.35rem",
+                  minHeight: "62px",
+                  borderRadius: "14px",
+                  fontWeight: 500,
+                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+                  boxSizing: "border-box",
+                }}
               />
 
               {/* Problem Description with Integrated Voice Input */}
-              <div style={{ marginTop: "1rem" }}>
+              <div style={{ marginTop: "1.5rem" }}>
                 <div
                   style={{
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
-                    marginBottom: "0.4rem",
+                    marginBottom: "0.6rem",
                   }}
                 >
                   <label
                     style={{
-                      fontSize: "0.875rem",
+                      fontSize: "1.05rem",
                       fontWeight: 600,
                       color: "var(--text-primary)",
                     }}
@@ -596,12 +648,12 @@ export function ReportProblemPage() {
                           display: "inline-flex",
                           alignItems: "center",
                           gap: "0.45rem",
-                          padding: "0.35rem 0.75rem",
+                          padding: "0.4rem 0.85rem",
                           backgroundColor: "#fee2e2",
                           border: "1px solid #fca5a5",
                           borderRadius: "var(--radius-full)",
                           color: "#b91c1c",
-                          fontSize: "0.8rem",
+                          fontSize: "0.85rem",
                           fontWeight: 700,
                           cursor: "pointer",
                         }}
@@ -627,12 +679,12 @@ export function ReportProblemPage() {
                           display: "inline-flex",
                           alignItems: "center",
                           gap: "0.45rem",
-                          padding: "0.35rem 0.75rem",
+                          padding: "0.4rem 0.85rem",
                           backgroundColor: "var(--color-primary-subtle)",
                           border: "1px solid var(--color-primary-border)",
                           borderRadius: "var(--radius-full)",
                           color: "var(--color-primary)",
-                          fontSize: "0.8rem",
+                          fontSize: "0.85rem",
                           fontWeight: 600,
                           cursor: "pointer",
                           transition: "all var(--transition-fast)",
@@ -642,7 +694,7 @@ export function ReportProblemPage() {
                       >
                         <span>🎙</span>
                         <span>{t("report.speakBtn")}</span>
-                        <span style={{ fontSize: "0.725rem", opacity: 0.85 }}>
+                        <span style={{ fontSize: "0.75rem", opacity: 0.85 }}>
                           ({language === "hi" ? "hi-IN" : "en-IN"})
                         </span>
                       </button>
@@ -652,15 +704,24 @@ export function ReportProblemPage() {
 
                 <Textarea
                   name="description"
-                  rows={5}
+                  rows={10}
                   placeholder={t("report.descPlaceholder")}
                   value={form.description}
                   onChange={handleChange}
                   required
                   hint={t("report.descHint")}
+                  className="cs-textarea-large"
                   style={{
+                    width: "100%",
+                    fontSize: "1.1rem",
+                    lineHeight: 1.7,
+                    padding: "1.25rem 1.35rem",
+                    minHeight: "240px",
+                    borderRadius: "14px",
                     borderColor: isListening ? "var(--color-danger)" : undefined,
-                    boxShadow: isListening ? "0 0 0 2px #fee2e2" : undefined,
+                    boxShadow: isListening ? "0 0 0 3px #fee2e2" : "0 2px 8px rgba(0, 0, 0, 0.04)",
+                    boxSizing: "border-box",
+                    resize: "vertical",
                   }}
                 />
 
@@ -1268,6 +1329,28 @@ export function ReportProblemPage() {
                     <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
                       Potential matches evaluated
                     </div>
+                  </div>
+                </div>
+
+                {/* AI-Synthesized Problem Description */}
+                <div style={{ marginTop: "1.25rem", paddingTop: "1rem", borderTop: "1px solid var(--border-color)" }}>
+                  <div style={{ fontSize: "0.825rem", fontWeight: 700, color: "var(--color-primary)", display: "flex", alignItems: "center", gap: "0.4rem", marginBottom: "0.5rem" }}>
+                    <Icon name="cpu" size={15} color="var(--color-primary)" />
+                    <span>AI-Synthesized Problem Description & Technical Intelligence</span>
+                  </div>
+                  <div
+                    style={{
+                      backgroundColor: "var(--bg-muted)",
+                      borderRadius: "var(--radius-md)",
+                      padding: "0.95rem 1.15rem",
+                      fontSize: "0.92rem",
+                      lineHeight: 1.6,
+                      color: "var(--text-primary)",
+                      whiteSpace: "pre-wrap",
+                      border: "1px solid var(--border-color)",
+                    }}
+                  >
+                    {aiAnalysis.ai_description || aiAnalysis.summary || createdProblem.ai_description || createdProblem.ai_summary || "AI assessment completed successfully."}
                   </div>
                 </div>
 

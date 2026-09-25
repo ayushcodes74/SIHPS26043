@@ -69,8 +69,7 @@
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
-  --radius-xl: 24px;
-  --radius-2xl: 32px;
+  --radius-card: 22px;
   --radius-full: 9999px;
 
   /* ── Transitions ────────────────────────────────────────────────────── */
@@ -82,6 +81,9 @@
   --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
+/* ==========================================================================
+   Dark Mode System (Warm Espresso / Charcoal)
+   ========================================================================== */
 [data-theme='dark'] {
   --bg-page: #111110;
   --bg-card: #1c1b19;
@@ -123,12 +125,14 @@
 html, body {
   margin: 0;
   padding: 0;
-  font-family: var(--font-family);
+  font-family: var(--font-sans);
   background-color: var(--bg-page);
   color: var(--text-primary);
-  line-height: 1.5;
+  line-height: 1.55;
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 200ms ease, color 200ms ease;
 }
 
 #root {
@@ -149,6 +153,7 @@ a:hover {
 }
 
 h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
   color: var(--text-primary);
   margin-top: 0;
   font-weight: 700;
@@ -171,19 +176,20 @@ p {
    Card Component
    ========================================================================== */
 .cs-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem;
+  background-color: var(--bg-card);
+  border-radius: var(--radius-card);
+  padding: 24px;
   box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition-normal), border-color var(--transition-normal);
+  border: 1px solid var(--border-color);
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
 }
 
 .cs-card:hover {
   border-color: #d4d0c8;
 }
 
-.cs-card-hover:hover {
+.cs-card-interactive:hover {
+  transform: translateY(-2px);
   box-shadow: var(--shadow-md);
   border-color: #d4d0c8;
 }
@@ -223,8 +229,9 @@ p {
   padding: 0.625rem 1.25rem;
   font-family: var(--font-family);
   font-size: 0.875rem;
-  font-weight: 600;
-  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-family: var(--font-sans);
+  border-radius: 12px;
   border: 1px solid transparent;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -246,6 +253,12 @@ p {
   color: #ffffff;
   border-color: var(--color-primary);
 }
+
+[data-theme='dark'] .cs-btn-primary {
+  background-color: #F5F4F0;
+  color: #181816;
+}
+
 .cs-btn-primary:hover:not(:disabled) {
   background-color: var(--color-primary-hover);
   border-color: var(--color-primary-hover);
@@ -259,6 +272,7 @@ p {
   color: #ffffff;
   border-color: var(--color-secondary);
 }
+
 .cs-btn-secondary:hover:not(:disabled) {
   background-color: var(--color-secondary-hover);
   transform: translateY(-1px);
@@ -266,10 +280,11 @@ p {
 
 /* Outline — warm cream border */
 .cs-btn-outline {
-  background-color: #ffffff;
+  background-color: transparent;
+  border: 1px solid var(--border-color);
   color: var(--text-primary);
-  border-color: var(--border-color);
 }
+
 .cs-btn-outline:hover:not(:disabled) {
   background-color: var(--bg-muted);
   border-color: #c4c0b8;
@@ -281,6 +296,7 @@ p {
   color: var(--text-secondary);
   border-color: transparent;
 }
+
 .cs-btn-ghost:hover:not(:disabled) {
   background-color: var(--bg-muted);
   color: var(--text-primary);
@@ -327,9 +343,10 @@ p {
   letter-spacing: -0.01em;
 }
 
-.cs-label .required {
-  color: var(--color-danger);
-  margin-left: 0.25rem;
+input:focus, textarea:focus, select:focus,
+.cs-input:focus, .cs-textarea:focus, .cs-select:focus {
+  border-color: var(--ink-900);
+  box-shadow: 0 0 0 3px rgba(24, 24, 22, 0.08);
 }
 
 .cs-input, .cs-textarea, .cs-select {
@@ -361,14 +378,14 @@ p {
   opacity: 0.6;
 }
 
-.cs-form-hint {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-top: 0.35rem;
+.cs-badge-warning {
+  background-color: var(--color-warning-subtle);
+  color: var(--color-warning);
+  border: 1px solid var(--color-warning-border);
 }
 
-.cs-form-error {
-  font-size: 0.75rem;
+.cs-badge-danger {
+  background-color: var(--color-danger-subtle);
   color: var(--color-danger);
   margin-top: 0.35rem;
   font-weight: 600;
@@ -379,29 +396,50 @@ p {
    ========================================================================== */
 .cs-grid-2 {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.25rem;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
 }
 
-.cs-grid-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.25rem;
+@media (min-width: 768px) {
+  .cs-grid-12 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .cs-grid-12 {
+    grid-template-columns: repeat(12, 1fr);
+  }
 }
 
 .cs-grid-4 {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: 1fr;
   gap: 1.25rem;
 }
 
-@media (max-width: 1024px) {
-  .cs-grid-4 { grid-template-columns: repeat(2, 1fr); }
-  .cs-grid-3 { grid-template-columns: repeat(2, 1fr); }
+@media (min-width: 640px) {
+  .cs-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-@media (max-width: 640px) {
-  .cs-grid-4, .cs-grid-3, .cs-grid-2 { grid-template-columns: 1fr; }
+@media (min-width: 1024px) {
+  .cs-grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.cs-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .cs-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 /* ==========================================================================
@@ -412,8 +450,10 @@ p {
   to { transform: rotate(360deg); }
 }
 
-.animate-spin {
-  animation: spin 1s linear infinite;
+@media (min-width: 768px) {
+  .cs-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @keyframes pulse {
@@ -432,4 +472,7 @@ p {
 
 .animate-fade-in-up {
   animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }

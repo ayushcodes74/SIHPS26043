@@ -5,84 +5,18 @@ import { Button } from "../../components/common/Button";
 import { Card } from "../../components/common/Cards";
 import { StatusBadge } from "../../components/common/Badges";
 import { LifecycleTimeline } from "../../components/problems/LifecycleTimeline";
-import { RootCauseView } from "../../components/problems/RootCauseView";
-import { DependencyGraphView } from "../../components/problems/DependencyGraphView";
+import { ProblemJourney } from "../../components/problems/ProblemJourney";
 import { SolutionsView } from "../../components/problems/SolutionsView";
 import { ImplementationView } from "../../components/problems/ImplementationView";
 import { ImpactView } from "../../components/problems/ImpactView";
-import { ExpertiseMatchingView } from "../../components/problems/ExpertiseMatchingView";
 import { AIAnalysisView } from "../../components/problems/AIAnalysisView";
-import { CommunityView } from "../../components/problems/CommunityView";
 import { TeamView } from "../../components/teams/TeamView";
 import { problemApi, matchingApi, challengeApi, projectApi, universityApi } from "../../services/api";
 import { getFileUrl } from "../../services/apiClient";
 import { useRouter } from "../../context/useRouter.js";
 import { useAuth } from "../../context/useAuth.js";
+import { useToast } from "../../context/useToast.js";
 import { useTranslation } from "../../context/useTranslation.js";
-
-function ProblemMatchingTab({ problem, requiredExpertise }) {
-  const [loading, setLoading] = useState(true);
-  const [institutions, setInstitutions] = useState([]);
-  const [faculty, setFaculty] = useState([]);
-  const [students, setStudents] = useState([]);
-  const [researchers, setResearchers] = useState([]);
-  const [startups, setStartups] = useState([]);
-  const [msmes, setMsmes] = useState([]);
-
-  useEffect(() => {
-    let ignore = false;
-    async function fetchMatches() {
-      if (!problem?.id) return;
-      try {
-        const [facRes, stuRes, resRes, staRes, msmRes, chalRes] = await Promise.allSettled([
-          matchingApi.getFacultyMatches(problem.id),
-          matchingApi.getStudentMatches(problem.id),
-          matchingApi.getResearcherMatches(problem.id),
-          matchingApi.getStartupMatches(problem.id),
-          matchingApi.getMsmeMatches(problem.id),
-          challengeApi.createChallenge({
-            title: problem.title,
-            description: problem.description,
-            district: problem.district,
-            affected_people: problem.affected_people,
-          }),
-        ]);
-
-        if (!ignore) {
-          if (facRes.status === "fulfilled" && facRes.value?.matches) setFaculty(facRes.value.matches);
-          if (stuRes.status === "fulfilled" && stuRes.value?.matches) setStudents(stuRes.value.matches);
-          if (resRes.status === "fulfilled" && resRes.value?.matches) setResearchers(resRes.value.matches);
-          if (staRes.status === "fulfilled" && staRes.value?.matches) setStartups(staRes.value.matches);
-          if (msmRes.status === "fulfilled" && msmRes.value?.matches) setMsmes(msmRes.value.matches);
-          if (chalRes.status === "fulfilled" && chalRes.value?.recommended_institutions) {
-            setInstitutions(chalRes.value.recommended_institutions);
-          }
-          setLoading(false);
-        }
-      } catch {
-        if (!ignore) setLoading(false);
-      }
-    }
-    fetchMatches();
-    return () => {
-      ignore = true;
-    };
-  }, [problem]);
-
-  return (
-    <ExpertiseMatchingView
-      institutions={institutions}
-      faculty={faculty}
-      students={students}
-      researchers={researchers}
-      startups={startups}
-      msmes={msmes}
-      loading={loading}
-      requiredExpertise={requiredExpertise}
-      problem={problem}
-    />
-  );
-}
 
 export function ProblemDetailPage({ id }) {
   const { navigate, query } = useRouter();
@@ -94,6 +28,7 @@ export function ProblemDetailPage({ id }) {
   const isSolver = ["FACULTY", "RESEARCHER", "STARTUP", "MSME"].includes(role);
   const isStudent = role === "STUDENT";
 
+  const toast = useToast();
   const [problem, setProblem] = useState(null);
   const [statusHistory, setStatusHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -120,6 +55,23 @@ export function ProblemDetailPage({ id }) {
       setError(err.message || "Failed to load problem details");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAuthorityVerifyProblem = async () => {
+    if (!problem?.id) return;
+    setVerifyingProblem(true);
+    try {
+      await problemApi.updateProblemStatus(problem.id, {
+        status: "VERIFIED",
+        note: "Problem verified by Municipal Authority. Confirmed jurisdiction and opened for student solution ideation.",
+      });
+      toast.success("Problem successfully verified by Municipal Authority! Opened for student solutions.");
+      await refreshProblem();
+    } catch (err) {
+      toast.error(err.message || "Failed to verify problem");
+    } finally {
+      setVerifyingProblem(false);
     }
   };
 
@@ -239,6 +191,7 @@ export function ProblemDetailPage({ id }) {
     domain: problem.category,
     subdomain: problem.subcategory,
     summary: problem.ai_summary || problem.description,
+    ai_description: problem.ai_description || problem.ai_summary || problem.description,
     severity: problem.severity || 5,
     urgency: problem.urgency || 5,
     confidence: problem.confidence ? Number(problem.confidence) : 0.82,
@@ -247,32 +200,27 @@ export function ProblemDetailPage({ id }) {
   };
 
   // --------------------------------------------------------------------------
-  // Role-Specific Tab Definition
+  // Role-Specific Tab Definition (Cleaned: Root Cause, Matching, Dependencies, Community removed)
   // --------------------------------------------------------------------------
   let availableTabs = [];
 
   if (isCitizen) {
-    // Citizen sees ONLY: Problem Details & Community discussion/support
+    // Citizen sees: Problem Details & Solutions decision
     availableTabs = [
       { key: "overview", label: "Problem Details", icon: "file-text" },
-      { key: "community", label: "Community & Discussion", icon: "message-circle" },
+      { key: "solutions", label: "Solutions & Decision", icon: "check-circle" },
     ];
   } else if (isAuthorityOrAdmin) {
-    // Authority / Admin sees all full statutory modules
+    // Authority / Admin sees: Overview, Solutions, Impact, Collaboration, History
     availableTabs = [
       { key: "overview", label: "Overview & Intelligence", icon: "cpu" },
-      { key: "matching", label: "Expertise Matching", icon: "users" },
-      { key: "root-causes", label: "Root Cause (RCA)", icon: "layers" },
-      { key: "dependencies", label: "Dependencies", icon: "link" },
       { key: "solutions", label: "Solutions & Evaluation", icon: "check-circle" },
-      { key: "implementation", label: "Implementation & Pilot", icon: "activity" },
       { key: "impact", label: "Impact & Verification", icon: "star" },
-      { key: "community", label: "Community", icon: "message-circle" },
       { key: "collaboration", label: "Collaboration", icon: "users" },
       { key: "history", label: "Status History", icon: "clock" },
     ];
   } else if (isStudent) {
-    // Student sees simplified workflow
+    // Student sees simplified workflow: Overview & Solutions tracking
     availableTabs = [
       { key: "overview", label: "Overview", icon: "cpu" },
       { key: "solutions", label: "Solutions & Tracking", icon: "check-circle" },
@@ -290,37 +238,13 @@ export function ProblemDetailPage({ id }) {
     // Solvers (Faculty, Researchers, Startups, MSMEs)
     availableTabs = [
       { key: "overview", label: "Overview & Intelligence", icon: "cpu" },
-      { key: "matching", label: "Expertise Matching", icon: "users" },
-      { key: "root-causes", label: "Root Cause (RCA)", icon: "layers" },
-      { key: "dependencies", label: "Dependencies", icon: "link" },
       { key: "solutions", label: "Solutions & Evaluation", icon: "check-circle" },
-      { key: "implementation", label: "Implementation & Pilot", icon: "activity" },
-      { key: "community", label: "Community", icon: "message-circle" },
       { key: "collaboration", label: "Collaboration", icon: "users" },
     ];
   }
 
   // Fallback to overview if currently requested tab is not allowed for role
   const currentTab = availableTabs.some((t) => t.key === activeTab) ? activeTab : "overview";
-
-  // --------------------------------------------------------------------------
-  // Simple Citizen 4-Stage Lifecycle Calculation
-  // --------------------------------------------------------------------------
-  const normalizedStatus = (problem.status || "OPEN").toUpperCase();
-
-  const isStage1Complete = true; // Problem Reported
-  const isStage2Complete = ["UNDER_REVIEW", "VERIFIED", "ASSIGNED", "ROOT_CAUSE_ANALYSIS", "SOLUTION_SEARCH", "SOLUTION_EVALUATION", "APPROVED", "PILOT", "IMPLEMENTING", "IN_PROGRESS", "RESOLVED"].includes(normalizedStatus);
-  const isStage3Active = ["ASSIGNED", "ROOT_CAUSE_ANALYSIS", "SOLUTION_SEARCH", "SOLUTION_EVALUATION", "APPROVED", "PILOT", "IMPLEMENTING", "IN_PROGRESS"].includes(normalizedStatus);
-  const isStage4Complete = normalizedStatus === "RESOLVED";
-
-  let citizenStatusMessage = "Problem received and queued for administrative review.";
-  if (normalizedStatus === "UNDER_REVIEW") {
-    citizenStatusMessage = "Municipal authorities are actively reviewing the problem details and geographic jurisdiction.";
-  } else if (isStage3Active) {
-    citizenStatusMessage = "Expertise matched and active solution interventions are currently underway.";
-  } else if (isStage4Complete) {
-    citizenStatusMessage = "Verified resolution completed on the ground. Thank you for making a civic difference!";
-  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", paddingBottom: "3rem" }}>
@@ -428,14 +352,41 @@ export function ProblemDetailPage({ id }) {
 
           {/* Authority / Admin Actions */}
           {isAuthorityOrAdmin && (
-            <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
+              {(problem.status === "REPORTED" || problem.status === "UNDER_REVIEW") ? (
+                <Button
+                  variant="primary"
+                  icon="check-circle"
+                  loading={verifyingProblem}
+                  onClick={handleAuthorityVerifyProblem}
+                  style={{ backgroundColor: "#15803d", borderColor: "#15803d", fontWeight: 700 }}
+                >
+                  ✓ Verify Problem
+                </Button>
+              ) : (
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.4rem",
+                    padding: "0.45rem 0.85rem",
+                    borderRadius: "var(--radius-full)",
+                    backgroundColor: "#dcfce7",
+                    color: "#15803d",
+                    fontSize: "0.8rem",
+                    fontWeight: 700,
+                    border: "1px solid #86efac",
+                  }}
+                >
+                  ✓ Verified by Authority
+                </span>
+              )}
               <Button
                 variant="outline"
                 onClick={() => navigate(`/problems/${id}/impact-passport`)}
               >
                 View Impact Passport
               </Button>
-
             </div>
           )}
         </div>
@@ -467,175 +418,77 @@ export function ProblemDetailPage({ id }) {
         </div>
       </div>
 
-      {/* -------------------------------------------------------------------- */}
-      {/* Lifecycle / Progress Tracker: Simple Stepper vs Timeline     */}
-      {/* -------------------------------------------------------------------- */}
-      {isCitizen || isStudent || role === "UNIVERSITY" ? (
-        <Card style={{ padding: "1.5rem" }}>
-          <div
+      {/* Authority Problem Verification Callout Banner */}
+      {isAuthorityOrAdmin && (problem.status === "REPORTED" || problem.status === "UNDER_REVIEW") && (
+        <div
+          style={{
+            backgroundColor: "#f0fdf4",
+            border: "1.5px solid #86efac",
+            borderRadius: "var(--radius-xl)",
+            padding: "1.25rem 1.5rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "1rem",
+            boxShadow: "0 2px 10px rgba(22, 101, 52, 0.08)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", flex: 1, minWidth: "280px" }}>
+            <div
+              style={{
+                width: "44px",
+                height: "44px",
+                borderRadius: "50%",
+                backgroundColor: "#dcfce7",
+                color: "#16a34a",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "1.3rem",
+                fontWeight: 800,
+                flexShrink: 0,
+              }}
+            >
+              ✓
+            </div>
+            <div>
+              <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700, color: "#166534" }}>
+                Municipal Authority Problem Verification Required
+              </h4>
+              <p style={{ margin: "0.25rem 0 0", fontSize: "0.875rem", color: "#15803d", lineHeight: 1.4 }}>
+                Citizen submitted civic report #{problem.id}. Verify this problem to confirm statutory jurisdiction and open it for student solution ideation.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="primary"
+            size="md"
+            icon="check-circle"
+            loading={verifyingProblem}
+            onClick={handleAuthorityVerifyProblem}
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "1.25rem",
-              flexWrap: "wrap",
-              gap: "0.5rem",
+              backgroundColor: "#16a34a",
+              borderColor: "#16a34a",
+              fontWeight: 700,
+              fontSize: "0.95rem",
+              padding: "0.65rem 1.4rem",
+              boxShadow: "0 2px 8px rgba(22, 163, 74, 0.3)",
             }}
           >
-            <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "var(--text-primary)" }}>
-              {language === "hi" ? "समाधान प्रगति एवं स्थिति" : "Problem Resolution Journey"}
-            </h3>
-            <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
-              {language === "hi" ? "वर्तमान स्थिति: " : "Current Status: "}
-              <strong style={{ color: "var(--color-primary)" }}>
-                {(problem.status || "OPEN").replace(/_/g, " ")}
-              </strong>
-            </span>
-          </div>
-
-          {/* Clean Stepper for Citizens and Students */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "0.5rem",
-              flexWrap: "wrap",
-            }}
-          >
-            {/* Stage 1: Problem Reported */}
-            <div
-              style={{
-                flex: 1,
-                minWidth: "120px",
-                padding: "0.85rem 1rem",
-                borderRadius: "var(--radius-md)",
-                backgroundColor: "var(--color-success-subtle)",
-                border: "1px solid var(--color-success-border)",
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.3rem",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: "var(--color-success)", fontWeight: 700, fontSize: "0.85rem" }}>
-                <span>✓</span>
-                <span>{language === "hi" ? "समस्या दर्ज" : (isStudent ? "Problem" : "Reported")}</span>
-              </div>
-              <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                {new Date(problem.created_at).toLocaleDateString()}
-              </div>
-            </div>
-
-            <Icon name="chevron-right" size={20} color="var(--text-muted)" />
-
-            {/* Stage 2: Under Review */}
-            <div
-              style={{
-                flex: 1,
-                minWidth: "120px",
-                padding: "0.85rem 1rem",
-                borderRadius: "var(--radius-md)",
-                backgroundColor: isStage2Complete ? "var(--color-success-subtle)" : "var(--bg-muted)",
-                border: `1px solid ${isStage2Complete ? "var(--color-success-border)" : "var(--border-color)"}`,
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.3rem",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.4rem",
-                  color: isStage2Complete ? "var(--color-success)" : "var(--text-muted)",
-                  fontWeight: 700,
-                  fontSize: "0.85rem",
-                }}
-              >
-                <span>{isStage2Complete ? "✓" : "○"}</span>
-                <span>{language === "hi" ? "समीक्षाधीन" : (isStudent ? "Understand" : "Under Review")}</span>
-              </div>
-              <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                {isStage2Complete ? "Verified" : "Pending"}
-              </div>
-            </div>
-
-            <Icon name="chevron-right" size={20} color="var(--text-muted)" />
-
-            {/* Stage 3: Being Worked On */}
-            <div
-              style={{
-                flex: 1,
-                minWidth: "120px",
-                padding: "0.85rem 1rem",
-                borderRadius: "var(--radius-md)",
-                backgroundColor: isStage4Complete ? "var(--color-success-subtle)" : isStage3Active ? "var(--color-primary-subtle)" : "var(--bg-muted)",
-                border: `1px solid ${isStage4Complete ? "var(--color-success-border)" : isStage3Active ? "var(--color-primary-border)" : "var(--border-color)"}`,
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.3rem",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.4rem",
-                  color: isStage4Complete ? "var(--color-success)" : isStage3Active ? "var(--color-primary)" : "var(--text-muted)",
-                  fontWeight: 700,
-                  fontSize: "0.85rem",
-                }}
-              >
-                <span>{isStage4Complete ? "✓" : isStage3Active ? "⚡" : "○"}</span>
-                <span>{language === "hi" ? "समाधान कार्य जारी" : (isStudent ? "Forward & Implement" : "Being Worked On")}</span>
-              </div>
-              <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                {isStage4Complete ? "Completed" : isStage3Active ? "Active" : "Awaiting team"}
-              </div>
-            </div>
-
-            <Icon name="chevron-right" size={20} color="var(--text-muted)" />
-
-            {/* Stage 4: Resolved */}
-            <div
-              style={{
-                flex: 1,
-                minWidth: "120px",
-                padding: "0.85rem 1rem",
-                borderRadius: "var(--radius-md)",
-                backgroundColor: isStage4Complete ? "var(--color-success-subtle)" : "var(--bg-muted)",
-                border: `1px solid ${isStage4Complete ? "var(--color-success-border)" : "var(--border-color)"}`,
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.3rem",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.4rem",
-                  color: isStage4Complete ? "var(--color-success)" : "var(--text-muted)",
-                  fontWeight: 700,
-                  fontSize: "0.85rem",
-                }}
-              >
-                <span>{isStage4Complete ? "✓" : "○"}</span>
-                <span>{language === "hi" ? "समाधान संपन्न" : (isStudent ? "Track Outcome" : "Resolved")}</span>
-              </div>
-              <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                {isStage4Complete ? "Community Verified" : "Final Stage"}
-              </div>
-            </div>
-          </div>
-
-          <div style={{ marginTop: "1rem", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-            ℹ️ {citizenStatusMessage}
-          </div>
-        </Card>
-      ) : (
-        <LifecycleTimeline problem={problem} onStatusUpdated={refreshProblem} />
+            Verify Problem as Authority
+          </Button>
+        </div>
       )}
+
+      {/* -------------------------------------------------------------------- */}
+      {/* Unified Problem-to-Implementation Resolution Journey                 */}
+      {/* -------------------------------------------------------------------- */}
+      <ProblemJourney
+        problem={problem}
+        onStatusUpdated={refreshProblem}
+        onSelectTab={(tabKey) => setActiveTab(tabKey)}
+      />
 
       {/* Primary Navigation Tabs */}
       <div
@@ -681,10 +534,18 @@ export function ProblemDetailPage({ id }) {
       <div>
         {/* Tab 1: Overview / Problem Details */}
         {currentTab === "overview" && (
-          <div className={isCitizen || isStudent ? "cs-grid-1" : "cs-grid-2"} style={{ alignItems: "start", gap: "1.5rem" }}>
-            <Card
-              title={isCitizen || isStudent ? "Problem Description & Field Evidence" : "Problem Description & Ground Context"}
-              subtitle={isCitizen ? "Citizen submission details" : (isStudent ? "Understand the civic challenge" : "Citizen reported statement")}
+          <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+            {/* AI Synthesized Problem Description & Intelligence Banner */}
+            <div
+              style={{
+                backgroundColor: "#ffffff",
+                borderRadius: "var(--radius-xl)",
+                border: "1.5px solid #e0e7ff",
+                boxShadow: "0 4px 20px -2px rgba(99, 102, 241, 0.12)",
+                padding: "1.5rem 1.75rem",
+                position: "relative",
+                overflow: "hidden",
+              }}
             >
               <p style={{ margin: "0 0 1rem", fontSize: "0.95rem", color: "var(--text-secondary)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
                 {problem.description}
@@ -838,90 +699,168 @@ export function ProblemDetailPage({ id }) {
                   </h5>
                   <div
                     style={{
-                      borderRadius: "var(--radius-md)",
-                      overflow: "hidden",
-                      backgroundColor: "#0f172a",
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "10px",
+                      backgroundColor: "rgba(99, 102, 241, 0.1)",
+                      color: "#6366f1",
                       display: "flex",
-                      justifyContent: "center",
                       alignItems: "center",
-                      maxHeight: "360px",
+                      justifyContent: "center",
+                      fontSize: "1.1rem",
                     }}
                   >
-                    {problem.evidence_type?.includes("video") ||
-                    problem.evidence_url.endsWith(".mp4") ||
-                    problem.evidence_url.endsWith(".webm") ||
-                    problem.evidence_url.endsWith(".mov") ? (
-                      <video
-                        src={getFileUrl(problem.evidence_url)}
-                        controls
-                        style={{ maxWidth: "100%", maxHeight: "360px" }}
-                      />
-                    ) : (
-                      <img
-                        src={getFileUrl(problem.evidence_url)}
-                        alt="Field Evidence"
-                        style={{ maxWidth: "100%", maxHeight: "360px", objectFit: "contain" }}
-                      />
+                    ✨
+                  </div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "var(--text-primary)" }}>
+                      AI-Synthesized Problem Description
+                    </h4>
+                    <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                      Autonomous civic diagnostic analysis & technical assessment
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                  <span
+                    style={{
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      padding: "0.25rem 0.65rem",
+                      borderRadius: "var(--radius-full)",
+                      backgroundColor: "#e0e7ff",
+                      color: "#4338ca",
+                      border: "1px solid #c7d2fe",
+                    }}
+                  >
+                    Confidence: {Math.round((Number(problem.ai_confidence || problem.confidence || 0.92)) * 100)}%
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      padding: "0.25rem 0.65rem",
+                      borderRadius: "var(--radius-full)",
+                      backgroundColor: "#fee2e2",
+                      color: "#b91c1c",
+                      border: "1px solid #fca5a5",
+                    }}
+                  >
+                    Severity: {problem.severity || "HIGH"}
+                  </span>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  backgroundColor: "rgba(248, 250, 252, 0.85)",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "var(--radius-lg)",
+                  padding: "1.1rem 1.25rem",
+                  fontSize: "0.95rem",
+                  lineHeight: 1.65,
+                  color: "var(--text-primary)",
+                  whiteSpace: "pre-wrap",
+                }}
+              >
+                {problem.ai_description || problem.ai_summary || "AI assessment in progress. Analyzing environmental telemetry, municipal jurisdiction, and engineering parameters."}
+              </div>
+            </div>
+
+            {/* Split view: Citizen Ground Context and Technical NLP Analysis */}
+            <div className={isCitizen || isStudent ? "cs-grid-1" : "cs-grid-2"} style={{ alignItems: "start", gap: "1.5rem" }}>
+              <Card
+                title={isCitizen || isStudent ? "Citizen Field Report & Evidence" : "Problem Description & Ground Context"}
+                subtitle={isCitizen ? "Citizen submission details" : (isStudent ? "Understand the civic challenge" : "Citizen reported statement")}
+              >
+                <div style={{ marginBottom: "0.5rem" }}>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>
+                    Citizen's Submitted Statement:
+                  </span>
+                </div>
+                <p style={{ margin: "0 0 1rem", fontSize: "0.95rem", color: "var(--text-secondary)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+                  {problem.description}
+                </p>
+
+                {/* Evidence Section */}
+                {problem.evidence_url && (
+                  <div style={{ marginTop: "1.25rem", paddingTop: "1rem", borderTop: "1px solid var(--border-color)" }}>
+                    <h5 style={{ margin: "0 0 0.65rem", fontSize: "0.9rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                      <span>{problem.evidence_type?.includes("video") || problem.evidence_url.endsWith(".mp4") ? "🎥" : "📷"}</span>
+                      <span>Attached Field Evidence</span>
+                      {problem.evidence_name && (
+                        <span style={{ fontWeight: 400, color: "var(--text-muted)", fontSize: "0.8rem" }}>
+                          ({problem.evidence_name})
+                        </span>
+                      )}
+                    </h5>
+                    <div
+                      style={{
+                        borderRadius: "var(--radius-md)",
+                        overflow: "hidden",
+                        backgroundColor: "#0f172a",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        maxHeight: "360px",
+                      }}
+                    >
+                      {problem.evidence_type?.includes("video") ||
+                      problem.evidence_url.endsWith(".mp4") ||
+                      problem.evidence_url.endsWith(".webm") ||
+                      problem.evidence_url.endsWith(".mov") ? (
+                        <video
+                          src={problem.evidence_url.startsWith("http") ? problem.evidence_url : `http://localhost:5000${problem.evidence_url.startsWith("/") ? "" : "/"}${problem.evidence_url}`}
+                          controls
+                          style={{ maxWidth: "100%", maxHeight: "360px" }}
+                        />
+                      ) : (
+                        <img
+                          src={problem.evidence_url.startsWith("http") ? problem.evidence_url : `http://localhost:5000${problem.evidence_url.startsWith("/") ? "" : "/"}${problem.evidence_url}`}
+                          alt="Field Evidence"
+                          style={{ maxWidth: "100%", maxHeight: "360px", objectFit: "contain" }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Geographic Details */}
+                <div style={{ marginTop: "1.5rem", paddingTop: "1rem", borderTop: "1px solid var(--border-color)", fontSize: "0.85rem" }}>
+                  <h5 style={{ margin: "0 0 0.5rem", fontSize: "0.9rem", fontWeight: 700 }}>Geographic Details</h5>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.5rem", color: "var(--text-muted)" }}>
+                    <div>District: <strong style={{ color: "var(--text-primary)" }}>{problem.district || "N/A"}</strong></div>
+                    <div>City / Block: <strong style={{ color: "var(--text-primary)" }}>{problem.city || "N/A"}</strong></div>
+                    <div>Address: <strong style={{ color: "var(--text-primary)" }}>{problem.address || "N/A"}</strong></div>
+                    {problem.affected_people && (
+                      <div>Affected Population: <strong style={{ color: "var(--text-primary)" }}>{problem.affected_people}</strong></div>
                     )}
                   </div>
                 </div>
-              )}
+              </Card>
 
-              {/* Geographic Details */}
-              <div style={{ marginTop: "1.5rem", paddingTop: "1rem", borderTop: "1px solid var(--border-color)", fontSize: "0.85rem" }}>
-                <h5 style={{ margin: "0 0 0.5rem", fontSize: "0.9rem", fontWeight: 700 }}>Geographic Details</h5>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.5rem", color: "var(--text-muted)" }}>
-                  <div>District: <strong style={{ color: "var(--text-primary)" }}>{problem.district || "N/A"}</strong></div>
-                  <div>City / Block: <strong style={{ color: "var(--text-primary)" }}>{problem.city || "N/A"}</strong></div>
-                  <div>Address: <strong style={{ color: "var(--text-primary)" }}>{problem.address || "N/A"}</strong></div>
-                  {problem.affected_people && (
-                    <div>Affected Population: <strong style={{ color: "var(--text-primary)" }}>{problem.affected_people}</strong></div>
-                  )}
-                </div>
-              </div>
-            </Card>
-
-            {/* AI Analysis View - AI Intelligence & Capability Breakdown */}
-            <AIAnalysisView aiAnalysis={aiAnalysisObj} priorityScore={problem.priority_score} />
+              {/* AI Analysis View - AI Intelligence & Capability Breakdown */}
+              <AIAnalysisView analysis={aiAnalysisObj} aiAnalysis={aiAnalysisObj} priorityScore={problem.priority_score} />
+            </div>
           </div>
         )}
 
-        {/* Tab 2: Expertise Matching (Solvers / Authority) */}
-        {!isCitizen && currentTab === "matching" && (
-          <ProblemMatchingTab problem={problem} requiredExpertise={skills} />
+        {/* Solutions & Evaluation (Available to Citizen, Student, Solvers, Authority) */}
+        {currentTab === "solutions" && (
+          <SolutionsView
+            problemId={problem.id}
+            problem={problem}
+            onProblemUpdated={refreshProblem}
+          />
         )}
 
-        {/* Tab 3: Root Cause Analysis (Solvers / Authority) */}
-        {!isCitizen && currentTab === "root-causes" && (
-          <RootCauseView problemId={problem.id} currentProblem={problem} />
-        )}
-
-        {/* Tab 4: Dependencies (Solvers / Authority) */}
-        {!isCitizen && currentTab === "dependencies" && (
-          <DependencyGraphView problemId={problem.id} currentProblem={problem} />
-        )}
-
-        {/* Tab 5: Solutions & Evaluation (Solvers / Authority) */}
-        {!isCitizen && currentTab === "solutions" && (
-          <SolutionsView problemId={problem.id} />
-        )}
-
-        {/* Tab 6: Implementation & Pilot (Solvers / Authority) */}
-        {!isCitizen && currentTab === "implementation" && (
-          <ImplementationView problemId={problem.id} />
-        )}
-
-        {/* Tab 7: Impact & Verification (Authority / Admin) */}
+        {/* Impact & Verification (Authority / Admin) */}
         {isAuthorityOrAdmin && currentTab === "impact" && (
           <ImpactView problemId={problem.id} />
         )}
 
-        {/* Tab 8: Community (Citizens, Solvers, Authority) */}
-        {currentTab === "community" && (
-          <CommunityView problemId={problem.id} />
-        )}
-
-        {/* Tab 9: Collaboration Teams (Solvers / Authority) */}
+        {/* Collaboration Teams */}
         {!isCitizen && currentTab === "collaboration" && (
           <TeamView problem={problem} />
         )}

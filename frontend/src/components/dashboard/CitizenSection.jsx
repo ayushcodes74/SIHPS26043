@@ -9,17 +9,54 @@ import { EmptyState, LoadingSkeleton } from "../common/Feedback";
 import { useRouter } from "../../context/useRouter";
 import { useTranslation } from "../../context/useTranslation";
 import { useAuth } from "../../context/useAuth";
+import { useToast } from "../../context/useToast";
 
 export function CitizenSection() {
   const { navigate } = useRouter();
   const { t, language } = useTranslation();
   const { user } = useAuth();
+  const toast = useToast();
 
   const [loading, setLoading] = useState(true);
   const [myProblems, setMyProblems] = useState([]);
   const [priorityProblems, setPriorityProblems] = useState([]);
   const [reputation, setReputation] = useState(null);
   const [error, setError] = useState("");
+
+  // Quick Problem Report State with Enlarged Input Boxes
+  const [quickTitle, setQuickTitle] = useState("");
+  const [quickDesc, setQuickDesc] = useState("");
+  const [submittingQuick, setSubmittingQuick] = useState(false);
+  const [quickSuccess, setQuickSuccess] = useState(null);
+
+  const handleQuickSubmit = async (e) => {
+    e.preventDefault();
+    if (!quickTitle.trim() || !quickDesc.trim()) {
+      toast.error(language === "hi" ? "कृपया शीर्षक और विवरण दोनों दर्ज करें" : "Please provide both problem title and description");
+      return;
+    }
+    setSubmittingQuick(true);
+    try {
+      const res = await problemApi.createProblem({
+        title: quickTitle.trim(),
+        description: quickDesc.trim(),
+        district: "Ranchi",
+        city: "Ranchi",
+        affected_people: 350,
+      });
+      const created = res.problem || res;
+      setMyProblems((prev) => [created, ...prev]);
+      setQuickTitle("");
+      setQuickDesc("");
+      setQuickSuccess(created);
+      toast.success(language === "hi" ? "समस्या सफलतापूर्वक दर्ज की गई!" : "Problem successfully reported with AI analysis!");
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || "Failed to submit problem");
+    } finally {
+      setSubmittingQuick(false);
+    }
+  };
 
   useEffect(() => {
     let ignore = false;
@@ -36,7 +73,7 @@ export function CitizenSection() {
           if (myRes.status === "fulfilled") {
             const list = myRes.value?.problems || [];
             // Strictly ensure only current user's submitted reports are shown
-            const userOnly = user?.id ? list.filter((p) => p.reporter_id === user.id) : list;
+            const userOnly = user?.id ? list.filter((p) => Number(p.reporter_id) === Number(user.id)) : list;
             setMyProblems(userOnly);
           }
           if (allRes.status === "fulfilled") {
@@ -45,7 +82,7 @@ export function CitizenSection() {
             const isTestRecord = (item) => {
               const text = `${item.title || ""} ${item.description || ""}`;
               return /^(M\d+|Test\s+M\d+|Passport\s+Problem|Cit\d+|Auth\d+)/i.test(item.title || "") ||
-                     /\b(M\d+|test-runner|synthetic-test-suite)\b/i.test(text);
+                /\b(M\d+|test-runner|synthetic-test-suite)\b/i.test(text);
             };
             const cleanProblems = all.filter((p) => !isTestRecord(p));
             // Filter high priority problems
@@ -77,9 +114,9 @@ export function CitizenSection() {
   const totalCount = myProblems.length;
   const underReviewCount = myProblems.filter((p) => p.status === "UNDER_REVIEW").length;
   const inProgressCount = myProblems.filter((p) =>
-    ["ASSIGNED", "ROOT_CAUSE_ANALYSIS", "SOLUTION_SEARCH", "SOLUTION_EVALUATION", "APPROVED", "PILOT", "IMPLEMENTING"].includes(p.status)
+    ["ASSIGNED", "ROOT_CAUSE_ANALYSIS", "SOLUTION_SEARCH", "SOLUTION_EVALUATION", "APPROVED", "EXECUTION_SUBMITTED", "PILOT", "IMPLEMENTING"].includes(p.status)
   ).length;
-  const resolvedCount = myProblems.filter((p) => p.status === "RESOLVED").length;
+  const resolvedCount = myProblems.filter((p) => ["RESOLVED", "CLOSED"].includes(p.status)).length;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
@@ -189,6 +226,123 @@ export function CitizenSection() {
           </div>
         </Card>
       )}
+
+      {/* Quick Report Section with Large Title & Description inputs */}
+      <Card
+        title={language === "hi" ? "नागरिक समस्या दर्ज करें (AI विश्लेषण सहित)" : "Report a Civic Issue with Autonomous AI Analysis"}
+        subtitle={language === "hi" ? "समस्या का शीर्षक और विवरण नीचे लिखें — AI तुरंत वर्गीकरण और विशेषज्ञ मैपिंग करेगा" : "Enter the problem title and full description below — AI will automatically classify domain, urgency, and route to researchers"}
+        actions={
+          <Button variant="outline" size="sm" icon="external-link" onClick={() => navigate("/report")}>
+            {language === "hi" ? "विस्तृत विज़ार्ड →" : "Full Report Wizard →"}
+          </Button>
+        }
+      >
+        <form onSubmit={handleQuickSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+          {quickSuccess && (
+            <div
+              style={{
+                padding: "0.85rem 1.15rem",
+                borderRadius: "10px",
+                backgroundColor: "var(--color-success-subtle)",
+                border: "1px solid var(--color-success-border)",
+                color: "var(--color-success)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: "0.5rem",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                <Icon name="shield-check" size={20} />
+                <span style={{ fontWeight: 600 }}>
+                  {language === "hi"
+                    ? `समस्या #${quickSuccess.id} दर्ज की गई: ${quickSuccess.category || "नागरिक"}`
+                    : `Issue #${quickSuccess.id} Registered & Classified as ${quickSuccess.category || "General"}`} (Priority: {quickSuccess.priority_score || "Normal"})
+                </span>
+              </div>
+              <Button size="xs" variant="outline" onClick={() => navigate(`/problems/${quickSuccess.id}`)}>
+                {language === "hi" ? "केस देखें →" : "View Case Dossier →"}
+              </Button>
+            </div>
+          )}
+
+          <div>
+            <label style={{ display: "block", fontSize: "1rem", fontWeight: 600, color: "var(--text-primary)", marginBottom: "0.45rem" }}>
+              {language === "hi" ? "समस्या का शीर्षक" : "Problem Title"} <span style={{ color: "var(--color-danger)" }}>*</span>
+            </label>
+            <input
+              type="text"
+              placeholder={language === "hi" ? "उदा. कोकर इंडस्ट्रियल क्षेत्र में ट्रांसफार्मर स्पार्किंग और तेल रिसाव..." : "e.g., Underground drinking water pipe fracture near Albert Ekka Chowk, Ranchi..."}
+              value={quickTitle}
+              onChange={(e) => setQuickTitle(e.target.value)}
+              required
+              style={{
+                width: "100%",
+                fontSize: "1.15rem",
+                padding: "1rem 1.25rem",
+                minHeight: "54px",
+                borderRadius: "12px",
+                fontWeight: 500,
+                border: "1.5px solid var(--border-color)",
+                backgroundColor: "var(--bg-surface)",
+                color: "var(--text-primary)",
+                boxShadow: "0 2px 6px rgba(0, 0, 0, 0.03)",
+                outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: "block", fontSize: "1rem", fontWeight: 600, color: "var(--text-primary)", marginBottom: "0.45rem" }}>
+              {language === "hi" ? "समस्या का विस्तृत विवरण" : "Problem Description & Ground Details"} <span style={{ color: "var(--color-danger)" }}>*</span>
+            </label>
+            <textarea
+              rows={6}
+              placeholder={language === "hi" ? "समस्या के प्रभाव, स्थान के सटीक बिंदु, प्रभावित नागरिकों की संख्या और तात्कालिक खतरे का विस्तृत वर्णन करें..." : "Describe the exact situation, root observations, safety hazards, affected residents, and duration of the issue..."}
+              value={quickDesc}
+              onChange={(e) => setQuickDesc(e.target.value)}
+              required
+              style={{
+                width: "100%",
+                fontSize: "1.05rem",
+                lineHeight: 1.6,
+                padding: "1.1rem 1.25rem",
+                minHeight: "160px",
+                borderRadius: "12px",
+                border: "1.5px solid var(--border-color)",
+                backgroundColor: "var(--bg-surface)",
+                color: "var(--text-primary)",
+                boxShadow: "0 2px 6px rgba(0, 0, 0, 0.03)",
+                outline: "none",
+                resize: "vertical",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <Icon name="map-pin" size={16} color="var(--color-primary)" />
+              <span style={{ fontSize: "0.875rem", color: "var(--text-muted)", fontWeight: 500 }}>
+                {language === "hi" ? "स्थान: राँची (झारखंड)" : "Location: Ranchi (Jharkhand)"}
+              </span>
+            </div>
+
+            <Button
+              type="submit"
+              variant="primary"
+              size="md"
+              loading={submittingQuick}
+              icon="sparkles"
+              style={{ padding: "0.8rem 1.85rem", fontSize: "1rem", fontWeight: 600 }}
+            >
+              {language === "hi" ? "दर्ज करें और AI विश्लेषण चलाएं" : "Submit & Run AI Analysis"}
+            </Button>
+          </div>
+        </form>
+      </Card>
 
       {/* Section: Problems I Reported */}
       <Card

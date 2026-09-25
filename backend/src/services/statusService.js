@@ -1,59 +1,95 @@
 const STATUS_FLOW = {
-    REPORTED: ["UNDER_REVIEW"],
+    REPORTED: [
+        "UNDER_REVIEW",
+        "VERIFIED",
+        "SOLUTION_SEARCH",
+        "SOLUTION_EVALUATION",
+        "APPROVED",
+        "EXECUTION_SUBMITTED",
+        "CLOSED",
+        "RESOLVED"
+    ],
 
     UNDER_REVIEW: [
         "VERIFIED",
-        "REPORTED"
+        "REPORTED",
+        "SOLUTION_SEARCH",
+        "SOLUTION_EVALUATION",
+        "APPROVED",
+        "EXECUTION_SUBMITTED",
+        "CLOSED",
+        "RESOLVED"
     ],
 
     VERIFIED: [
-        "ASSIGNED"
+        "ASSIGNED",
+        "SOLUTION_SEARCH",
+        "SOLUTION_EVALUATION",
+        "APPROVED",
+        "EXECUTION_SUBMITTED",
+        "CLOSED",
+        "RESOLVED"
     ],
 
     ASSIGNED: [
         "ROOT_CAUSE_ANALYSIS",
-        "SOLUTION_SEARCH"
+        "SOLUTION_SEARCH",
+        "SOLUTION_EVALUATION",
+        "APPROVED",
+        "EXECUTION_SUBMITTED",
+        "CLOSED",
+        "RESOLVED"
     ],
 
     ROOT_CAUSE_ANALYSIS: [
-        "SOLUTION_SEARCH"
+        "SOLUTION_SEARCH",
+        "SOLUTION_EVALUATION",
+        "APPROVED",
+        "EXECUTION_SUBMITTED",
+        "CLOSED",
+        "RESOLVED"
     ],
 
     SOLUTION_SEARCH: [
-        "SOLUTION_EVALUATION"
+        "SOLUTION_EVALUATION",
+        "APPROVED",
+        "EXECUTION_SUBMITTED",
+        "CLOSED",
+        "RESOLVED"
     ],
 
     SOLUTION_EVALUATION: [
         "APPROVED",
-        "SOLUTION_SEARCH"
-    ],
-
-    APPROVED: [
-        "PILOT"
-    ],
-
-    PILOT: [
-        "IMPLEMENTING",
-        "SOLUTION_SEARCH"
-    ],
-
-    IMPLEMENTING: [
+        "SOLUTION_SEARCH",
+        "EXECUTION_SUBMITTED",
+        "CLOSED",
         "RESOLVED"
     ],
 
+    APPROVED: [
+        "EXECUTION_SUBMITTED",
+        "CLOSED",
+        "RESOLVED",
+        "VERIFIED"
+    ],
+
+    EXECUTION_SUBMITTED: [
+        "CLOSED",
+        "RESOLVED",
+        "APPROVED"
+    ],
+
     RESOLVED: [
-        "MONITORING"
+        "CLOSED",
+        "EXECUTION_SUBMITTED"
     ],
 
-    MONITORING: [
-        "SUSTAINED",
-        "IMPLEMENTING"
-    ],
-
-    SUSTAINED: []
+    CLOSED: []
 };
 
 function isValidTransition(currentStatus, newStatus) {
+    if (!currentStatus || !newStatus) return false;
+    if (currentStatus === newStatus) return true;
     return STATUS_FLOW[currentStatus]?.includes(newStatus) || false;
 }
 

@@ -13,14 +13,16 @@ const {
     parseIntParam
 } = require("../services/facultyMatchingService");
 
+const { parseProblemId } = require("../utils/validation");
+
 // ---------------------------------------------------------------------------
 // GET /api/problems/:id/faculty-matches
 // ---------------------------------------------------------------------------
 
 async function getFacultyMatches(req, res) {
-    const problemId = parseInt(req.params.id, 10);
+    const problemId = parseProblemId(req.params.id);
 
-    if (isNaN(problemId)) {
+    if (!problemId) {
         return res.status(400).json({ message: "Invalid problem id" });
     }
 

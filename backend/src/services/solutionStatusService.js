@@ -49,14 +49,14 @@ class NotFoundError extends Error {
  * Valid solution status transitions map.
  */
 const SOLUTION_STATUS_FLOW = {
-    SUBMITTED: ["UNDER_EVALUATION"],
-    UNDER_EVALUATION: ["EVALUATED", "SUBMITTED"],
-    EVALUATED: ["APPROVED", "REJECTED", "UNDER_EVALUATION"],
-    APPROVED: ["PILOT", "EVALUATED"],
-    REJECTED: ["UNDER_EVALUATION", "EVALUATED"],
-    PILOT: ["IMPLEMENTING", "APPROVED"],
-    IMPLEMENTING: ["COMPLETED", "PILOT"],
-    COMPLETED: ["IMPLEMENTING"],
+    SUBMITTED: ["UNDER_EVALUATION", "EVALUATED", "APPROVED", "REJECTED"],
+    UNDER_EVALUATION: ["EVALUATED", "APPROVED", "REJECTED", "SUBMITTED"],
+    EVALUATED: ["APPROVED", "REJECTED", "UNDER_EVALUATION", "SUBMITTED"],
+    APPROVED: ["EXECUTION_SUBMITTED", "COMPLETED", "CLOSED", "EVALUATED", "UNDER_EVALUATION", "SUBMITTED", "REJECTED"],
+    EXECUTION_SUBMITTED: ["COMPLETED", "CLOSED", "APPROVED"],
+    COMPLETED: ["CLOSED", "APPROVED"],
+    CLOSED: [],
+    REJECTED: ["UNDER_EVALUATION", "EVALUATED", "SUBMITTED", "APPROVED"],
 };
 
 /**
@@ -131,6 +131,60 @@ async function updateSolutionStatus({ solutionId, newStatus, user }) {
          RETURNING id, problem_id, submitted_by, title, status, updated_at`,
         [trimmedStatus, solutionId]
     );
+
+    // Synchronize parent problem status to APPROVED on solution approval
+    if (trimmedStatus === "APPROVED") {
+        try {
+            const probId = solRes.rows[0].problem_id;
+            await pool.query(
+                `UPDATE problems
+                 SET status = 'APPROVED', updated_at = CURRENT_TIMESTAMP
+                 WHERE id = $1`,
+                [probId]
+            );
+
+            await pool.query(
+                `INSERT INTO problem_status_history
+                 (problem_id, old_status, new_status, changed_by, note)
+                 VALUES ($1, $2, 'APPROVED', $3, $4)`,
+                [
+                    probId,
+                    "SOLUTION_EVALUATION",
+                    user.id,
+                    `Solution idea "${solRes.rows[0].title}" selected & approved by Authority. Handed over to Startups & MSMEs for pilot implementation.`
+                ]
+            );
+        } catch (syncErr) {
+            console.error("Parent problem status sync error on solution approval:", syncErr);
+        }
+    }
+
+    // Synchronize parent problem status to CLOSED on solution closure
+    if (trimmedStatus === "CLOSED") {
+        try {
+            const probId = solRes.rows[0].problem_id;
+            await pool.query(
+                `UPDATE problems
+                 SET status = 'CLOSED', updated_at = CURRENT_TIMESTAMP
+                 WHERE id = $1`,
+                [probId]
+            );
+
+            await pool.query(
+                `INSERT INTO problem_status_history
+                 (problem_id, old_status, new_status, changed_by, note)
+                 VALUES ($1, $2, 'CLOSED', $3, $4)`,
+                [
+                    probId,
+                    "EXECUTION_SUBMITTED",
+                    user.id,
+                    `Problem officially verified, resolved, and closed by Municipal Authority following startup/MSME execution.`
+                ]
+            );
+        } catch (syncErr) {
+            console.error("Parent problem status sync error on solution closure:", syncErr);
+        }
+    }
 
     // Non-blocking Module 14 Reputation Integration (Mandatory Fix 3)
     if (trimmedStatus === "APPROVED") {

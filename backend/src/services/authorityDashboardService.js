@@ -302,17 +302,17 @@ async function getSummary() {
     const fundRow = fundingResult.rows[0] || {};
 
     return {
-        total_problems: parseInt(row.total_problems),
-        reported: parseInt(row.reported),
-        under_review: parseInt(row.under_review),
-        verified: parseInt(row.verified),
-        assigned: parseInt(row.assigned),
-        in_progress: parseInt(row.in_progress),
-        resolved: parseInt(row.resolved),
-        high_priority: parseInt(row.high_priority),
-        critical_priority: parseInt(row.critical_priority),
-        total_clusters: parseInt(clusterResult.rows[0].clusters),
-        categories: catResult.rows.map((r) => ({
+        total_problems: parseInt(row.total_problems || 0),
+        reported: parseInt(row.reported || 0),
+        under_review: parseInt(row.under_review || 0),
+        verified: parseInt(row.verified || 0),
+        assigned: parseInt(row.assigned || 0),
+        in_progress: parseInt(row.in_progress || 0),
+        resolved: parseInt(row.resolved || 0),
+        high_priority: parseInt(row.high_priority || 0),
+        critical_priority: parseInt(row.critical_priority || 0),
+        total_clusters: parseInt(clusterRow.clusters || 0),
+        categories: catRows.map((r) => ({
             category: r.category,
             count: r.count
         })),

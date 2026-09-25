@@ -41,10 +41,12 @@ function handleError(error, res, fallbackMessage) {
     res.status(500).json({ message: fallbackMessage });
 }
 
+const { parseProblemId } = require("../utils/validation");
+
 // POST /api/problems/:id/dependencies/detect
 async function detectDependenciesHandler(req, res) {
-    const problemId = parseInt(req.params.id, 10);
-    if (isNaN(problemId)) {
+    const problemId = parseProblemId(req.params.id);
+    if (!problemId) {
         return res.status(400).json({ message: "Invalid problem id" });
     }
 
@@ -63,8 +65,8 @@ async function detectDependenciesHandler(req, res) {
 
 // POST /api/problems/:id/dependencies
 async function createDependencyHandler(req, res) {
-    const problemId = parseInt(req.params.id, 10);
-    if (isNaN(problemId)) {
+    const problemId = parseProblemId(req.params.id);
+    if (!problemId) {
         return res.status(400).json({ message: "Invalid problem id" });
     }
 
@@ -85,8 +87,8 @@ async function createDependencyHandler(req, res) {
 
 // GET /api/problems/:id/dependencies
 async function getProblemDependenciesHandler(req, res) {
-    const problemId = parseInt(req.params.id, 10);
-    if (isNaN(problemId)) {
+    const problemId = parseProblemId(req.params.id);
+    if (!problemId) {
         return res.status(400).json({ message: "Invalid problem id" });
     }
 
@@ -174,8 +176,8 @@ async function verifyDependencyHandler(req, res) {
 
 // GET /api/problems/:id/dependency-graph
 async function getDependencyGraphHandler(req, res) {
-    const problemId = parseInt(req.params.id, 10);
-    if (isNaN(problemId)) {
+    const problemId = parseProblemId(req.params.id);
+    if (!problemId) {
         return res.status(400).json({ message: "Invalid problem id" });
     }
     const depth = parseInt(req.query.depth, 10) || 2;
@@ -190,8 +192,8 @@ async function getDependencyGraphHandler(req, res) {
 
 // GET /api/problems/:id/impact-chain
 async function getImpactChainHandler(req, res) {
-    const problemId = parseInt(req.params.id, 10);
-    if (isNaN(problemId)) {
+    const problemId = parseProblemId(req.params.id);
+    if (!problemId) {
         return res.status(400).json({ message: "Invalid problem id" });
     }
 

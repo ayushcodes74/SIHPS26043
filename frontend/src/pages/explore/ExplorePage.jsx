@@ -629,8 +629,8 @@ export function ExplorePage() {
                   ? "No civic problem records match your current filter and search criteria. Try changing your filters or search terms."
                   : "No problems have been recorded in the platform yet."
               }
-              actionLabel={activeFilterCount > 0 ? "Clear All Filters" : "Report First Problem"}
-              onAction={activeFilterCount > 0 ? handleClearFilters : () => navigate("/report")}
+              actionLabel={activeFilterCount > 0 ? "Clear All Filters" : role === "CITIZEN" ? "Report First Problem" : undefined}
+              onAction={activeFilterCount > 0 ? handleClearFilters : role === "CITIZEN" ? () => navigate("/report") : undefined}
             />
           ) : (
             <div

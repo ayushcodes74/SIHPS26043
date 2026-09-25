@@ -153,8 +153,8 @@ async function calculateMilestoneProgress(implementationId) {
         [implementationId]
     );
 
-    const totalWeight = Number(res.rows[0].total_weight);
-    const completedWeight = Number(res.rows[0].completed_weight);
+    const totalWeight = Number(res.rows[0]?.total_weight || 0);
+    const completedWeight = Number(res.rows[0]?.completed_weight || 0);
 
     if (totalWeight === 0) return 0;
     return Number(((completedWeight / totalWeight) * 100).toFixed(2));
@@ -174,8 +174,8 @@ async function getBlockersSummary(implementationId) {
     );
 
     return {
-        open: res.rows[0].open || 0,
-        critical: res.rows[0].critical || 0,
+        open: res.rows[0]?.open || 0,
+        critical: res.rows[0]?.critical || 0,
     };
 }
 
@@ -225,15 +225,11 @@ async function initiateImplementation({ solutionId, user, payload }) {
         ? payload.title.trim()
         : `Pilot Implementation: ${solution.title}`;
 
-    if (!payload.target_start_date) {
-        throw new ValidationError('"target_start_date" is required');
-    }
-    if (!payload.target_end_date) {
-        throw new ValidationError('"target_end_date" is required');
-    }
+    const startDateStr = payload.target_start_date || new Date().toISOString().split("T")[0];
+    const endDateStr = payload.target_end_date || payload.expected_completion_date || new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString().split("T")[0];
 
-    const start = new Date(payload.target_start_date);
-    const end = new Date(payload.target_end_date);
+    const start = new Date(startDateStr);
+    const end = new Date(endDateStr);
 
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
         throw new ValidationError("Dates must be valid calendar dates (YYYY-MM-DD)");
@@ -258,6 +254,8 @@ async function initiateImplementation({ solutionId, user, payload }) {
         outcomeMetrics = payload.outcome_metrics;
     }
 
+    const executingUserId = payload.executing_user_id || payload.partner_id || payload.partnerId || solution.submitted_by;
+
     // 5. Insert implementation
     const insertRes = await pool.query(
         `INSERT INTO solution_implementations
@@ -271,11 +269,11 @@ async function initiateImplementation({ solutionId, user, payload }) {
             solutionId,
             solution.problem_id,
             user.id,
-            payload.executing_user_id || solution.submitted_by,
+            executingUserId,
             title,
             payload.description ? payload.description.trim() : null,
-            payload.target_start_date,
-            payload.target_end_date,
+            startDateStr,
+            endDateStr,
             budgetAllocated,
             payload.location_details ? payload.location_details.trim() : null,
             JSON.stringify(outcomeMetrics),

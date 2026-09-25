@@ -680,7 +680,7 @@ async function getUserReputation(userId) {
                     OR (r.current_rank_score = $2 AND r.verified_impact_score = $3 AND r.completed_implementations = $4 AND r.lifetime_score > $5))`,
             [user.role, rep.current_rank_score, rep.verified_impact_score, rep.completed_implementations, rep.lifetime_score]
         );
-        rank = parseInt(rankRes.rows[0].rank, 10);
+        rank = parseInt(rankRes?.rows?.[0]?.rank || 1, 10);
     }
 
     // Breakdown
@@ -716,6 +716,7 @@ async function getUserReputation(userId) {
         user_id: user.id,
         name: user.name,
         role: user.role,
+        score: rep.current_rank_score ?? rep.lifetime_score ?? 0,
         lifetime_score: rep.lifetime_score,
         current_rank_score: rep.current_rank_score,
         verified_impact_score: Number(rep.verified_impact_score),
@@ -865,7 +866,7 @@ async function getUniversityLeaderboard({ page = 1, limit = 20 }) {
     const offset = (p - 1) * l;
 
     const countRes = await pool.query("SELECT COUNT(*) FROM institutions");
-    const total = parseInt(countRes.rows[0].count, 10);
+    const total = parseInt(countRes?.rows?.[0]?.count || (countRes?.rows?.length || 1), 10);
 
     const res = await pool.query(
         `SELECT inst.id as institution_id, inst.name, inst.type, inst.district, inst.city,

@@ -27,6 +27,7 @@ const trustRoutes = require("./routes/trustRoutes");
 const analyticsRoutes = require("./routes/analyticsRoutes");
 const studentRoutes = require("./routes/studentRoutes");
 const universityRoutes = require("./routes/universityRoutes");
+const projectRoutes = require("./routes/projectRoutes");
 
 const path = require("path");
 const app = express();
@@ -55,6 +56,7 @@ app.use("/api/rankings", rankingsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/trust", trustRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/projects", projectRoutes);
 
 
 app.get("/health", async (req, res) => {

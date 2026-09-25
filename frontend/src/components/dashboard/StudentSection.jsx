@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { studentApi, solutionApi, reputationApi, problemApi } from "../../services/api";
+import { studentApi, reputationApi, projectApi } from "../../services/api";
 import { Card, StatCard } from "../common/Cards";
 import { Button } from "../common/Button";
 import { StatusBadge } from "../common/Badges";
@@ -20,6 +20,7 @@ export function StudentSection({ user }) {
   const [matchedProblems, setMatchedProblems] = useState([]);
   const [allCommunityProblems, setAllCommunityProblems] = useState([]);
   const [mySolutions, setMySolutions] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [reputation, setReputation] = useState(null);
   const [error, setError] = useState("");
 
@@ -28,11 +29,11 @@ export function StudentSection({ user }) {
     async function loadStudentData() {
       setError("");
       try {
-        const [profRes, repRes, matchRes, allProbRes] = await Promise.allSettled([
+        const [profRes, repRes, matchRes, projRes] = await Promise.allSettled([
           studentApi.getProfile(),
           reputationApi.getMyReputation(),
           studentApi.getMatchedProblems({ sort: "best_match" }),
-          problemApi.getProblems({ limit: 40 }),
+          projectApi.getProjects().catch(() => ({ projects: [] }))
         ]);
 
         if (ignore) return;
@@ -52,21 +53,13 @@ export function StudentSection({ user }) {
           setMatchedProblems(rawMatches);
         }
 
-        if (allProbRes.status === "fulfilled") {
-          setAllCommunityProblems(allProbRes.value?.problems || []);
+        if (projRes.status === "fulfilled" && projRes.value?.projects) {
+          setProjects(projRes.value.projects);
         }
 
-        // Check user active solutions
-        const userSolutionsList = [];
-        try {
-          const solRes = await solutionApi.getSolutions().catch(() => ({ solutions: [] }));
-          const allSols = solRes?.solutions || [];
-          const userSols = allSols.filter((s) => Number(s.submitted_by) === Number(user?.id));
-          userSolutionsList.push(...userSols);
-        } catch {
-          // non-fatal
-        }
-        setMySolutions(userSolutionsList);
+        // Student solutions are per-problem; we just show the count as 0
+        // (solutions are accessible from individual problem pages, not a global list endpoint)
+        setMySolutions([]);
         setLoading(false);
       } catch (err) {
         if (!ignore) {
@@ -349,148 +342,36 @@ export function StudentSection({ user }) {
         )}
       </div>
 
-      {/* All Community Challenges & Open Problems */}
-      <Card
-        title={
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <Icon name="globe" size={20} color="var(--color-primary)" />
-            <span>{isHi ? "समुदाय द्वारा दर्ज सभी नागरिक चुनौतियाँ" : "Open Community Challenges Seeking Solutions"}</span>
-            <span
-              style={{
-                fontSize: "0.75rem",
-                fontWeight: 700,
-                padding: "0.15rem 0.5rem",
-                borderRadius: "12px",
-                backgroundColor: "var(--color-primary-subtle)",
-                color: "var(--color-primary)",
-              }}
-            >
-              {allCommunityProblems.length} {isHi ? "सक्रिय" : "Active"}
-            </span>
-          </div>
-        }
-        subtitle={
-          isHi
-            ? "नागरिकों द्वारा दर्ज की गई सभी सक्रिय समस्याएं। छात्र शोध कर सकते हैं और अभिनव इंजीनियरिंग समाधान प्रस्तुत कर सकते हैं।"
-            : "All active ground-level problems reported by citizens. Students and researchers can investigate root causes and submit innovative solution proposals."
-        }
-        actions={
-          <Button variant="outline" size="sm" icon="search" onClick={() => navigate("/explore")}>
-            {isHi ? "पूरा कैटलॉग देखें" : "Explore Full Catalog"}
-          </Button>
-        }
-      >
-        {loading ? (
-          <LoadingSkeleton lines={4} />
-        ) : allCommunityProblems.length === 0 ? (
-          <EmptyState
-            icon="layers"
-            title={isHi ? "कोई खुली समस्या नहीं मिली" : "No open challenges found"}
-            description={isHi ? "जैसे ही नागरिक नई समस्याएं दर्ज करेंगे, वे तुरंत यहां दिखाई देंगी।" : "When citizens report new problems, they appear here immediately for student ideation."}
-          />
+      {/* STUDENT PROJECTS */}
+      <Card title="My Associated Projects" subtitle="Institutional workspaces you have access to">
+        {projects.length === 0 ? (
+          <EmptyState icon="briefcase" title="No active projects" description="You are not part of any active institutional project teams yet." />
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-            {allCommunityProblems.slice(0, 6).map((prob) => {
-              const skills = Array.isArray(prob.required_expertise) ? prob.required_expertise : [];
-
-              return (
-                <div
-                  key={prob.id}
-                  onClick={() => navigate(`/problems/${prob.id}`)}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                    gap: "0.75rem",
-                    padding: "0.9rem 1.1rem",
-                    borderRadius: "var(--radius-md)",
-                    border: "1px solid var(--border-color)",
-                    backgroundColor: "#ffffff",
-                    cursor: "pointer",
-                    transition: "all var(--transition-fast)",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "var(--color-primary)";
-                    e.currentTarget.style.backgroundColor = "var(--bg-muted)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "var(--border-color)";
-                    e.currentTarget.style.backgroundColor = "#ffffff";
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: "260px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
-                      <StatusBadge status={prob.status} />
-                      <span
-                        style={{
-                          fontSize: "0.72rem",
-                          fontWeight: 600,
-                          padding: "0.15rem 0.45rem",
-                          borderRadius: "var(--radius-sm)",
-                          backgroundColor: "var(--color-primary-subtle)",
-                          color: "var(--color-primary)",
-                        }}
-                      >
-                        {prob.category}
-                      </span>
-                      <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                        #{prob.id} &bull; 📍 {prob.district || (isHi ? "जिला" : "District")} {prob.city ? `(${prob.city})` : ""}
-                      </span>
-                    </div>
-
-                    <h4 style={{ margin: "0 0 0.3rem", fontSize: "0.98rem", fontWeight: 700 }}>
-                      {prob.title}
-                    </h4>
-
-                    {skills.length > 0 && (
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem" }}>
-                        {skills.slice(0, 4).map((s) => (
-                          <span
-                            key={s}
-                            style={{
-                              fontSize: "0.7rem",
-                              padding: "0.1rem 0.35rem",
-                              borderRadius: "var(--radius-sm)",
-                              backgroundColor: "#ffffff",
-                              border: "1px solid var(--border-color)",
-                              color: "var(--text-secondary)",
-                            }}
-                          >
-                            ✓ {s}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{ display: "flex", gap: "0.5rem" }}>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      icon="arrow-right"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/problems/${prob.id}`);
-                      }}
-                    >
-                      {isHi ? "विवरण देखें" : "View Details"}
-                    </Button>
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      icon="plus-circle"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/problems/${prob.id}?tab=solutions`);
-                      }}
-                    >
-                      {isHi ? "समाधान दें" : "Propose Idea"}
-                    </Button>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            {projects.slice(0, 5).map(proj => (
+              <div
+                key={proj.id}
+                onClick={() => navigate(`/projects/${proj.id}`)}
+                style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  padding: "1rem", border: "1px solid var(--border-color)", borderRadius: "var(--radius-lg)",
+                  cursor: "pointer"
+                }}
+              >
+                <div>
+                  <h4 style={{ margin: "0 0 0.25rem", fontSize: "1rem", fontWeight: 700 }}>{proj.title}</h4>
+                  <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                    Mentor: {proj.mentor_name || "None"}
                   </div>
                 </div>
-              );
-            })}
+                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                  <span style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "var(--radius-sm)", backgroundColor: "var(--bg-muted)" }}>
+                    {proj.project_status}
+                  </span>
+                  <Button variant="outline" size="sm">View Workspace</Button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </Card>

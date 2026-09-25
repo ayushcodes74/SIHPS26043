@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Select } from "../../components/common/FormControls";
 import { Icon } from "../../components/common/Icons";
 import { Button } from "../../components/common/Button";
 import { Card } from "../../components/common/Cards";
@@ -10,7 +11,8 @@ import { ImplementationView } from "../../components/problems/ImplementationView
 import { ImpactView } from "../../components/problems/ImpactView";
 import { AIAnalysisView } from "../../components/problems/AIAnalysisView";
 import { TeamView } from "../../components/teams/TeamView";
-import { problemApi } from "../../services/api";
+import { problemApi, matchingApi, challengeApi, projectApi, universityApi } from "../../services/api";
+import { getFileUrl } from "../../services/apiClient";
 import { useRouter } from "../../context/useRouter.js";
 import { useAuth } from "../../context/useAuth.js";
 import { useToast } from "../../context/useToast.js";
@@ -18,7 +20,7 @@ import { useTranslation } from "../../context/useTranslation.js";
 
 export function ProblemDetailPage({ id }) {
   const { navigate, query } = useRouter();
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const { language } = useTranslation();
 
   const isCitizen = role === "CITIZEN";
@@ -31,7 +33,10 @@ export function ProblemDetailPage({ id }) {
   const [statusHistory, setStatusHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [verifyingProblem, setVerifyingProblem] = useState(false);
+  const [projectCreated, setProjectCreated] = useState(false);
+  const [evaluation, setEvaluation] = useState(null);
+  const [evaluating, setEvaluating] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   // Default tab or query param tab
   const [activeTab, setActiveTab] = useState(query?.tab || "overview");
@@ -82,6 +87,14 @@ export function ProblemDetailPage({ id }) {
         if (!ignore) {
           setProblem(probRes.problem);
           setStatusHistory(histRes.history || []);
+          
+          if (role === 'UNIVERSITY') {
+             try {
+               const evalRes = await universityApi.getChallengeEvaluation(id);
+               if (evalRes.evaluation) setEvaluation(evalRes.evaluation);
+             } catch (e) { console.error("Failed to fetch evaluation", e); }
+          }
+          
           setLoading(false);
         }
       } catch (err) {
@@ -96,7 +109,44 @@ export function ProblemDetailPage({ id }) {
     return () => {
       ignore = true;
     };
-  }, [id]);
+  }, [id, role]);
+
+  const handleEvaluateChallenge = async () => {
+    setEvaluating(true);
+    try {
+      if (!evaluation) {
+        const res = await universityApi.createChallengeEvaluation(problem.id, { review_note: "Accepted for project" });
+        await universityApi.updateChallengeEvaluation(problem.id, { evaluation_status: "IN_PROJECT", review_note: "Accepted for project" });
+        setEvaluation({ ...res.evaluation, evaluation_status: "IN_PROJECT" });
+      } else {
+        const res = await universityApi.updateChallengeEvaluation(problem.id, { evaluation_status: "IN_PROJECT" });
+        setEvaluation(res.evaluation);
+      }
+      alert("Evaluation successful. You can now create a project.");
+    } catch (err) {
+      alert("Failed to evaluate: " + err.message);
+    } finally {
+      setEvaluating(false);
+    }
+  };
+
+  const handleCreateProject = async () => {
+    setCreating(true);
+    try {
+      await projectApi.createProject({
+        title: `Institutional Project for ${problem?.title?.substring(0, 30)}...`,
+        description: `Project initialized to solve Challenge #${problem?.id}`,
+        problem_id: problem?.id,
+        university_id: user?.id,
+      });
+      setProjectCreated(true);
+      alert("Project Workspace created successfully!");
+    } catch (err) {
+      alert("Failed to create project: " + err.message);
+    } finally {
+      setCreating(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -176,11 +226,13 @@ export function ProblemDetailPage({ id }) {
       { key: "solutions", label: "Solutions & Tracking", icon: "check-circle" },
     ];
   } else if (role === "UNIVERSITY") {
-    // University sees: Overview, Solutions, Collaboration
+    // University sees evaluation, matching, solutions, collaboration, and history
     availableTabs = [
-      { key: "overview", label: "Overview", icon: "cpu" },
+      { key: "overview", label: "Overview & Evaluation", icon: "cpu" },
+      { key: "matching", label: "Expertise Matching", icon: "users" },
       { key: "solutions", label: "Solutions & Evaluation", icon: "check-circle" },
       { key: "collaboration", label: "Collaboration", icon: "users" },
+      { key: "history", label: "Status History", icon: "clock" },
     ];
   } else {
     // Solvers (Faculty, Researchers, Startups, MSMEs)
@@ -495,27 +547,156 @@ export function ProblemDetailPage({ id }) {
                 overflow: "hidden",
               }}
             >
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: "4px",
-                  background: "linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899)",
-                }}
-              />
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                  gap: "0.75rem",
-                  marginBottom: "1rem",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+              <p style={{ margin: "0 0 1rem", fontSize: "0.95rem", color: "var(--text-secondary)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+                {problem.description}
+              </p>
+
+              {role === "UNIVERSITY" && (
+                <div style={{ marginTop: "1.25rem", borderRadius: "var(--radius-lg)", border: "1px solid var(--color-primary-border)", overflow: "hidden" }}>
+                  {/* Evaluation header */}
+                  <div style={{
+                    padding: "1rem 1.25rem",
+                    backgroundColor: "var(--color-primary-subtle)",
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                    borderBottom: "1px solid var(--color-primary-border)",
+                  }}>
+                    <div>
+                      <h4 style={{ margin: "0 0 0.2rem", fontSize: "0.95rem", fontWeight: 700, color: "var(--color-primary)" }}>
+                        Institutional Challenge Evaluation
+                      </h4>
+                      <p style={{ margin: 0, fontSize: "0.78rem", color: "var(--text-secondary)" }}>
+                        Evaluate this challenge to build an institutional project workspace
+                      </p>
+                    </div>
+                    {evaluation?.evaluation_status && (
+                      <StatusBadge status={evaluation.evaluation_status} />
+                    )}
+                  </div>
+
+                  {/* Evaluation body */}
+                  <div style={{ padding: "1.25rem", backgroundColor: "#ffffff", display: "flex", flexDirection: "column", gap: "1rem" }}>
+                    {/* State machine — all 7 valid evaluation statuses */}
+                    <div>
+                      <div style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted)", marginBottom: "0.6rem", letterSpacing: "0.05em" }}>
+                        Update Evaluation Status
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
+                        {[
+                          { value: "NEW",              label: "New",              color: "var(--text-muted)" },
+                          { value: "UNDER_REVIEW",     label: "Under Review",     color: "var(--color-warning)" },
+                          { value: "NEEDS_INFORMATION",label: "Needs Info",       color: "var(--color-warning)" },
+                          { value: "ACCEPTED",         label: "Accepted",         color: "var(--color-success)" },
+                          { value: "TEAM_FORMATION",   label: "Team Formation",   color: "var(--color-info)" },
+                          { value: "REJECTED",         label: "Rejected",         color: "var(--color-danger)" },
+                          { value: "IN_PROJECT",       label: "✓ In Project",    color: "var(--color-primary)" },
+                        ].map(({ value, label, color }) => {
+                          const current = evaluation?.evaluation_status || "NEW";
+                          const isSelected = current === value;
+                          return (
+                            <button
+                              key={value}
+                              type="button"
+                              disabled={evaluating}
+                              onClick={async () => {
+                                setEvaluating(true);
+                                try {
+                                  if (!evaluation) {
+                                    const res = await universityApi.createChallengeEvaluation(problem.id, { review_note: "Initial review" });
+                                    await universityApi.updateChallengeEvaluation(problem.id, { evaluation_status: value });
+                                    setEvaluation({ ...res.evaluation, evaluation_status: value });
+                                  } else {
+                                    const res = await universityApi.updateChallengeEvaluation(problem.id, { evaluation_status: value });
+                                    setEvaluation(res.evaluation || { ...evaluation, evaluation_status: value });
+                                  }
+                                } catch (err) {
+                                  alert("Failed to update evaluation: " + err.message);
+                                } finally {
+                                  setEvaluating(false);
+                                }
+                              }}
+                              style={{
+                                padding: "0.3rem 0.8rem",
+                                borderRadius: "var(--radius-full)",
+                                border: `1px solid ${isSelected ? color : "var(--border-color)"}`,
+                                backgroundColor: isSelected ? color : "#ffffff",
+                                color: isSelected ? "#ffffff" : "var(--text-secondary)",
+                                fontSize: "0.78rem",
+                                fontWeight: 600,
+                                cursor: evaluating ? "wait" : "pointer",
+                                transition: "all var(--transition-fast)",
+                                opacity: evaluating ? 0.6 : 1,
+                              }}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Create project CTA — only when IN_PROJECT */}
+                    {evaluation?.evaluation_status === "IN_PROJECT" && (
+                      <div style={{
+                        padding: "1rem",
+                        backgroundColor: "var(--color-success-subtle)",
+                        border: "1px solid var(--color-success-border)",
+                        borderRadius: "var(--radius-md)",
+                        display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem",
+                      }}>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: "0.88rem", color: "var(--color-success)", marginBottom: "0.2rem" }}>
+                            ✓ Challenge accepted — ready to build a project workspace
+                          </div>
+                          <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>
+                            Creating a workspace will allow you to assign team members, mentors, industry partners, request funding, record tests, and publish outcomes.
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", gap: "0.6rem" }}>
+                          {!projectCreated ? (
+                            <Button
+                              variant="primary"
+                              icon="briefcase"
+                              onClick={handleCreateProject}
+                              disabled={creating}
+                            >
+                              {creating ? "Creating..." : "Create Project Workspace"}
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="primary"
+                              icon="arrow-right"
+                              onClick={() => navigate("/projects")}
+                            >
+                              View My Projects
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Status not IN_PROJECT — show guidance */}
+                    {(!evaluation || !["IN_PROJECT"].includes(evaluation.evaluation_status)) && (
+                      <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                        <Icon name="info" size={13} />
+                        Set status to <strong style={{ color: "var(--color-primary)" }}>In Project</strong> to unlock project workspace creation.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Evidence Section */}
+              {problem.evidence_url && (
+                <div style={{ marginTop: "1.25rem", paddingTop: "1rem", borderTop: "1px solid var(--border-color)" }}>
+                  <h5 style={{ margin: "0 0 0.65rem", fontSize: "0.9rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                    <span>{problem.evidence_type?.includes("video") || problem.evidence_url.endsWith(".mp4") ? "🎥" : "📷"}</span>
+                    <span>Attached Field Evidence</span>
+                    {problem.evidence_name && (
+                      <span style={{ fontWeight: 400, color: "var(--text-muted)", fontSize: "0.8rem" }}>
+                        ({problem.evidence_name})
+                      </span>
+                    )}
+                  </h5>
                   <div
                     style={{
                       width: "36px",

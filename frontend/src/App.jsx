@@ -26,6 +26,8 @@ import ImpactPassportPage from "./pages/impactPassport/ImpactPassportPage.jsx";
 import TrustDashboardPage from "./pages/dashboard/TrustDashboardPage.jsx";
 import AnalyticsDashboardPage from "./pages/dashboard/AnalyticsDashboardPage.jsx";
 import { FacultyStudentsPage } from "./pages/university/FacultyStudentsPage.jsx";
+import { ProjectWorkspacePage } from "./pages/projects/ProjectWorkspacePage.jsx";
+import { ProjectsListPage } from "./pages/projects/ProjectsListPage.jsx";
 
 /**
  * Main Application View Routing Switcher
@@ -36,6 +38,12 @@ function AppContent() {
 
   const isProblemDetail = segments.length >= 2 && segments[0] === "problems";
   const problemId = isProblemDetail ? segments[1] : null;
+
+  // /projects            → list page
+  // /projects/:id        → workspace
+  const isProjectsRoot      = path === "/projects";
+  const isProjectWorkspace  = segments.length >= 2 && segments[0] === "projects" && !!segments[1];
+  const projectId = isProjectWorkspace ? segments[1] : null;
 
   // Loading Session Screen
   if (loading) {
@@ -107,6 +115,12 @@ function AppContent() {
         )
       )}
 
+      {/* Route: /projects  (list) */}
+      {isProjectsRoot && <ProjectsListPage />}
+
+      {/* Route: /projects/:id  (workspace) */}
+      {isProjectWorkspace && projectId && <ProjectWorkspacePage id={projectId} />}
+
       {/* Route: /notifications */}
       {path === "/notifications" && <NotificationsPage />}
 
@@ -135,7 +149,9 @@ function AppContent() {
         path !== "/rankings" &&
         path !== "/profile" &&
         path !== "/faculty-students" &&
-        !isProblemDetail && (
+        !isProjectsRoot &&
+        !isProblemDetail &&
+        !isProjectWorkspace && (
           <Card
             title={`Section: ${path.replace("/", "").toUpperCase()}`}
             subtitle="Integrated into CivicSync design system"

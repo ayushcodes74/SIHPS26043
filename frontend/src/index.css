@@ -1,157 +1,122 @@
 /* ==========================================================================
-   CivicSync Design System — Claude.ai Inspired Editorial Design System
-   Warm paper canvas, elegant serif typography, clean floating cards, and
-   minimalist charcoal & terracotta interactions.
+   CivicSync Design System — Premium Civic-Tech Innovation Platform
+   Cream/Black Minimal Editorial Aesthetic
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap');
 
 :root {
-  /* Claude Warm Canvas & Surface System */
-  --canvas: #FAF9F5;
-  --surface: #FFFFFF;
-  --surface-hover: #F6F4ED;
-  --bg-page: var(--canvas);
-  --bg-surface: var(--surface);
-  --bg-card: #FFFFFF;
-  --bg-card-hover: #FBF9F5;
-  --bg-muted: #F3F1EB;
-  --bg-muted-hover: #EBE8E0;
-  --bg-sidebar: #F5F3EC;
-  --bg-sidebar-hover: #ECEAE1;
-  --bg-sidebar-active: #E4E1D7;
+  /* ── Core Brand Palette — Black & Cream ─────────────────────────────── */
+  --color-primary: #0a0a0a;          /* Near-black primary */
+  --color-primary-dark: #000000;
+  --color-primary-hover: #1a1a1a;
+  --color-primary-subtle: #f5f4f1;   /* Warm cream tint */
+  --color-primary-border: #d4d0c8;
 
-  /* Editorial Ink & Typography Colors */
-  --ink-900: #181816;
-  --ink-700: #383632;
-  --ink-500: #6B6860;
-  --ink-400: #949086;
-  --text-primary: var(--ink-900);
-  --text-secondary: var(--ink-500);
-  --text-muted: var(--ink-400);
-  --text-light: #B8B5AA;
-  --text-white: #FFFFFF;
+  /* ── Secondary Accent — Warm Amber/Earth ───────────────────────────── */
+  --color-secondary: #7c6f3e;        /* Muted gold */
+  --color-secondary-hover: #6b5f34;
+  --color-secondary-subtle: #faf8f2;
+  --color-secondary-border: #e8e0c4;
 
-  /* Claude Brand Accents */
-  --color-accent: #D97757; /* Claude signature warm terracotta */
-  --color-accent-subtle: #FDF3EF;
-  --color-accent-border: #F7D6CA;
+  /* ── Semantic Status Colors ─────────────────────────────────────────── */
+  --color-success: #2d7a4f;
+  --color-success-subtle: #f0faf5;
+  --color-success-border: #a8d5b9;
 
-  /* Primary Button Charcoal / Black */
-  --color-primary: #191919;
-  --color-primary-hover: #32312E;
-  --color-primary-subtle: #F0EEE6;
-  --color-primary-border: #E0DDD4;
+  --color-warning: #b87333;
+  --color-warning-subtle: #fef9f0;
+  --color-warning-border: #e8c99a;
 
-  /* Semantic State Colors */
-  --success: #28734A;
-  --color-success: var(--success);
-  --color-success-subtle: #EDF7F1;
-  --color-success-border: #C6E8D4;
+  --color-danger: #c0392b;
+  --color-danger-subtle: #fef5f4;
+  --color-danger-border: #e8b4b0;
 
-  --warning: #B45309;
-  --color-warning: var(--warning);
-  --color-warning-subtle: #FEF7EE;
-  --color-warning-border: #FADBB5;
+  --color-info: #2c5f7a;
+  --color-info-subtle: #f0f6fa;
+  --color-info-border: #a8c8d8;
 
-  --danger: #C0392B;
-  --color-danger: var(--danger);
-  --color-danger-subtle: #FDF1F0;
-  --color-danger-border: #F7C8C5;
+  /* ── Surfaces & Backgrounds ─────────────────────────────────────────── */
+  --bg-page: #faf9f6;                /* Warm cream page background */
+  --bg-card: #ffffff;
+  --bg-card-hover: #fdfcfa;
+  --bg-muted: #f5f4f1;               /* Warm muted */
+  --bg-sidebar: #f8f7f4;             /* Slightly warmer than page */
+  --bg-sidebar-hover: #f0efe9;
+  --bg-sidebar-active: #eeebe3;
 
-  --blue-600: #2563EB;
-  --blue-400: #4D82F3;
-  --blue-100: #EBF2FE;
+  /* ── Text Colors ────────────────────────────────────────────────────── */
+  --text-primary: #0a0a0a;           /* Near-black */
+  --text-secondary: #3d3d3d;
+  --text-muted: #6e6e6e;
+  --text-light: #9e9e9e;
+  --text-white: #ffffff;
 
-  /* Soft Warm Hairline Borders */
-  --border-color: #E8E5DE;
-  --border-subtle: #F0EDE6;
-  --border-focus: #191919;
+  /* ── Borders ────────────────────────────────────────────────────────── */
+  --border-color: #e8e5df;           /* Warm border */
+  --border-light: #f0ede6;
+  --border-focus: #0a0a0a;           /* Black focus ring */
 
-  /* Organic Warm Elevation Shadows */
-  --shadow-xs: 0 1px 2px rgba(24, 24, 22, 0.03);
-  --shadow-sm: 0 4px 16px -2px rgba(24, 24, 22, 0.04), 0 2px 4px -1px rgba(24, 24, 22, 0.02);
-  --shadow-md: 0 8px 24px -4px rgba(24, 24, 22, 0.06), 0 4px 8px -2px rgba(24, 24, 22, 0.03);
-  --shadow-lg: 0 16px 36px -6px rgba(24, 24, 22, 0.08), 0 6px 12px -3px rgba(24, 24, 22, 0.04);
-  --shadow-xl: 0 24px 48px -12px rgba(24, 24, 22, 0.12);
+  /* ── Shadows ─────────────────────────────────────────────────────────── */
+  --shadow-xs: 0 1px 3px 0 rgba(10, 10, 10, 0.04);
+  --shadow-sm: 0 2px 8px 0 rgba(10, 10, 10, 0.06);
+  --shadow-md: 0 8px 24px -2px rgba(10, 10, 10, 0.08);
+  --shadow-lg: 0 16px 40px -4px rgba(10, 10, 10, 0.10);
+  --shadow-xl: 0 24px 64px -8px rgba(10, 10, 10, 0.12);
 
-  /* Rounded Radii */
-  --radius-xs: 6px;
+  /* ── Radii ──────────────────────────────────────────────────────────── */
+  --radius-xs: 4px;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-card: 22px;
   --radius-full: 9999px;
 
-  /* Fonts */
-  --font-serif: 'Newsreader', 'Lora', Georgia, serif;
-  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-heading: var(--font-serif);
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-
-  /* Transitions */
+  /* ── Transitions ────────────────────────────────────────────────────── */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Typography ─────────────────────────────────────────────────────── */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 /* ==========================================================================
    Dark Mode System (Warm Espresso / Charcoal)
    ========================================================================== */
 [data-theme='dark'] {
-  --canvas: #1E1E1C;
-  --surface: #272624;
-  --surface-hover: #302F2C;
-  --bg-page: var(--canvas);
-  --bg-surface: var(--surface);
-  --bg-card: #272624;
-  --bg-card-hover: #302F2C;
-  --bg-muted: #33322E;
-  --bg-muted-hover: #3D3C37;
-  --bg-sidebar: #22211F;
-  --bg-sidebar-hover: #2E2D2A;
-  --bg-sidebar-active: #383733;
+  --bg-page: #111110;
+  --bg-card: #1c1b19;
+  --bg-card-hover: #242320;
+  --bg-muted: #1c1b19;
+  --bg-sidebar: #141412;
+  --bg-sidebar-hover: #1c1b19;
+  --bg-sidebar-active: #252420;
 
-  --ink-900: #F5F4F0;
-  --ink-700: #D8D6CF;
-  --ink-500: #A6A39B;
-  --ink-400: #78756E;
-  --text-primary: var(--ink-900);
-  --text-secondary: var(--ink-500);
-  --text-muted: var(--ink-400);
+  --text-primary: #f5f4f0;
+  --text-secondary: #c8c6bf;
+  --text-muted: #8c8a84;
+  --text-light: #5c5a54;
+  --text-white: #ffffff;
 
-  --color-primary: #F5F4F0;
-  --color-primary-hover: #E2E0D8;
-  --color-primary-subtle: #383733;
-  --color-primary-border: #4A4843;
+  --border-color: #2e2d29;
+  --border-light: #252420;
+  --border-focus: #f5f4f0;
 
-  --border-color: #383632;
-  --border-subtle: #2F2D29;
-  --border-focus: #F5F4F0;
+  --color-primary: #f5f4f0;
+  --color-primary-hover: #e8e6e0;
+  --color-primary-subtle: rgba(245, 244, 240, 0.08);
+  --color-primary-border: rgba(245, 244, 240, 0.15);
 
-  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-sm: 0 4px 16px -2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 8px 24px -4px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 16px 36px -6px rgba(0, 0, 0, 0.6);
-
-  --color-accent: #E58B6E;
-  --color-accent-subtle: rgba(229, 139, 110, 0.15);
-  --color-accent-border: rgba(229, 139, 110, 0.3);
-
-  --color-success: #4ADE80;
-  --color-success-subtle: rgba(74, 222, 128, 0.12);
-  --color-success-border: rgba(74, 222, 128, 0.25);
-
-  --color-warning: #FBBF24;
-  --color-warning-subtle: rgba(251, 191, 36, 0.12);
-  --color-warning-border: rgba(251, 191, 36, 0.25);
-
-  --color-danger: #F87171;
-  --color-danger-subtle: rgba(248, 113, 113, 0.12);
-  --color-danger-border: rgba(248, 113, 113, 0.25);
+  --shadow-xs: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 2px 8px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px -2px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 40px -4px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 24px 64px -8px rgba(0, 0, 0, 0.6);
 }
 
 /* ==========================================================================
-   Base Resets & Editorial Typography
+   Base Resets
    ========================================================================== */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -180,51 +145,35 @@ html, body {
 a {
   color: inherit;
   text-decoration: none;
-  transition: color var(--transition-fast);
+  transition: opacity var(--transition-fast);
 }
 
-/* Serif Headlines in the Claude Style */
+a:hover {
+  opacity: 0.75;
+}
+
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   color: var(--text-primary);
   margin-top: 0;
-  font-weight: 500;
-  line-height: 1.22;
-  letter-spacing: -0.025em;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
-h1 { font-size: clamp(32px, 4.5vw, 48px); font-weight: 500; }
-h2 { font-size: clamp(24px, 3vw, 32px); font-weight: 500; }
-h3 { font-size: clamp(19px, 2vw, 23px); font-weight: 600; }
-h4 { font-size: 16px; font-weight: 600; font-family: var(--font-sans); }
+h1 { font-size: 2.5rem; font-weight: 900; letter-spacing: -0.04em; }
+h2 { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; }
+h3 { font-size: 1.3rem;  font-weight: 700; letter-spacing: -0.02em; }
+h4 { font-size: 1.05rem; font-weight: 600; }
 
 p {
   margin-top: 0;
   color: var(--text-secondary);
   line-height: 1.65;
-  font-size: 0.95rem;
-}
-
-.cs-label {
-  font-family: var(--font-sans);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.cs-kpi-number {
-  font-family: var(--font-serif);
-  font-size: clamp(38px, 4.5vw, 50px);
-  font-weight: 500;
-  line-height: 1.05;
-  color: var(--text-primary);
-  letter-spacing: -0.03em;
 }
 
 /* ==========================================================================
-   Claude-Style Floating Cards
+   Card Component
    ========================================================================== */
 .cs-card {
   background-color: var(--bg-card);
@@ -235,25 +184,50 @@ p {
   transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
 }
 
-.cs-card-interactive {
-  cursor: pointer;
+.cs-card:hover {
+  border-color: #d4d0c8;
 }
 
 .cs-card-interactive:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
-  border-color: #D8D4CA;
+  border-color: #d4d0c8;
 }
 
 /* ==========================================================================
-   Buttons (Claude Style: Solid Black, Clean Cream, and Gentle Outlines)
+   Badges & Tags
+   ========================================================================== */
+.cs-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cs-badge-demo {
+  background-color: #fef8e7;
+  color: #6b4c10;
+  border: 1px dashed #d4a84b;
+  font-size: 0.68rem;
+  padding: 0.15rem 0.5rem;
+}
+
+/* ==========================================================================
+   Buttons — Black-first, minimal premium
    ========================================================================== */
 .cs-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.7rem 1.4rem;
+  padding: 0.625rem 1.25rem;
+  font-family: var(--font-family);
   font-size: 0.875rem;
   font-weight: 500;
   font-family: var(--font-sans);
@@ -264,20 +238,20 @@ p {
   text-align: center;
   line-height: 1.25;
   white-space: nowrap;
-  text-decoration: none;
+  letter-spacing: -0.01em;
 }
 
 .cs-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
   transform: none !important;
 }
 
-/* Primary Button: Deep Black in light mode, Clean White in dark mode */
+/* Primary = Black */
 .cs-btn-primary {
   background-color: var(--color-primary);
-  color: #FFFFFF;
-  box-shadow: var(--shadow-xs);
+  color: #ffffff;
+  border-color: var(--color-primary);
 }
 
 [data-theme='dark'] .cs-btn-primary {
@@ -286,23 +260,25 @@ p {
 }
 
 .cs-btn-primary:hover:not(:disabled) {
-  opacity: 0.92;
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
   transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 12px rgba(10, 10, 10, 0.2);
 }
 
-/* Secondary Button: Soft warm cream with subtle border */
+/* Secondary */
 .cs-btn-secondary {
-  background-color: var(--bg-muted);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
+  background-color: var(--color-secondary);
+  color: #ffffff;
+  border-color: var(--color-secondary);
 }
 
 .cs-btn-secondary:hover:not(:disabled) {
-  background-color: var(--bg-muted-hover);
+  background-color: var(--color-secondary-hover);
+  transform: translateY(-1px);
 }
 
-/* Outline Button */
+/* Outline — warm cream border */
 .cs-btn-outline {
   background-color: transparent;
   border: 1px solid var(--border-color);
@@ -311,9 +287,10 @@ p {
 
 .cs-btn-outline:hover:not(:disabled) {
   background-color: var(--bg-muted);
-  border-color: var(--ink-700);
+  border-color: #c4c0b8;
 }
 
+/* Ghost */
 .cs-btn-ghost {
   background-color: transparent;
   color: var(--text-secondary);
@@ -325,68 +302,45 @@ p {
   color: var(--text-primary);
 }
 
+/* Danger */
+.cs-btn-danger {
+  background-color: var(--color-danger);
+  color: #ffffff;
+  border-color: var(--color-danger);
+}
+.cs-btn-danger:hover:not(:disabled) {
+  background-color: #a93226;
+  transform: translateY(-1px);
+}
+
+/* Sizes */
 .cs-btn-sm {
-  padding: 0.45rem 0.9rem;
-  font-size: 0.8125rem;
-  border-radius: 10px;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.78rem;
+  border-radius: var(--radius-sm);
 }
 
 .cs-btn-lg {
-  padding: 0.9rem 2rem;
-  font-size: 1rem;
-  border-radius: 14px;
-}
-
-/* Claude Sunburst / Asterisk Icon Helper */
-.claude-spark {
-  color: var(--color-accent);
-}
-
-/* Input Fields (Clean, warm, rounded, full-width) */
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="number"],
-input[type="search"],
-input[type="tel"],
-textarea,
-select,
-.cs-input,
-.cs-textarea,
-.cs-select {
-  width: 100%;
-  box-sizing: border-box;
-  font-family: var(--font-sans);
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 0.85rem 1.15rem;
+  padding: 0.875rem 2rem;
   font-size: 0.95rem;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+}
+
+/* ==========================================================================
+   Form Controls
+   ========================================================================== */
+.cs-form-group {
+  margin-bottom: 1.25rem;
+}
+
+.cs-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
   color: var(--text-primary);
-  transition: border-color 150ms ease, box-shadow 150ms ease;
-  outline: none;
-}
-
-/* Extra-large prominent input & textarea helpers */
-.cs-input-large {
-  width: 100% !important;
-  min-height: 56px !important;
-  font-size: 1.15rem !important;
-  font-weight: 500 !important;
-  padding: 1rem 1.25rem !important;
-  border-radius: 14px !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
-}
-
-.cs-textarea-large {
-  width: 100% !important;
-  min-height: 200px !important;
-  font-size: 1.05rem !important;
-  line-height: 1.65 !important;
-  padding: 1.1rem 1.25rem !important;
-  border-radius: 14px !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
-  resize: vertical !important;
+  margin-bottom: 0.4rem;
+  letter-spacing: -0.01em;
 }
 
 input:focus, textarea:focus, select:focus,
@@ -395,29 +349,33 @@ input:focus, textarea:focus, select:focus,
   box-shadow: 0 0 0 3px rgba(24, 24, 22, 0.08);
 }
 
-/* Badges */
-.cs-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.25rem 0.65rem;
-  border-radius: var(--radius-full);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-}
-
-.cs-badge-primary {
-  background-color: var(--bg-muted);
+.cs-input, .cs-textarea, .cs-select {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  font-family: inherit;
+  font-size: 0.875rem;
   color: var(--text-primary);
+  background-color: var(--bg-page);
   border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.cs-badge-success {
-  background-color: var(--color-success-subtle);
-  color: var(--color-success);
-  border: 1px solid var(--color-success-border);
+.cs-input::placeholder, .cs-textarea::placeholder {
+  color: var(--text-light);
+}
+
+.cs-input:focus, .cs-textarea:focus, .cs-select:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(10, 10, 10, 0.08);
+  background-color: #ffffff;
+}
+
+.cs-input:disabled, .cs-textarea:disabled, .cs-select:disabled {
+  background-color: var(--bg-muted);
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .cs-badge-warning {
@@ -429,11 +387,14 @@ input:focus, textarea:focus, select:focus,
 .cs-badge-danger {
   background-color: var(--color-danger-subtle);
   color: var(--color-danger);
-  border: 1px solid var(--color-danger-border);
+  margin-top: 0.35rem;
+  font-weight: 600;
 }
 
-/* Layout Grids */
-.cs-grid-12 {
+/* ==========================================================================
+   Grid System
+   ========================================================================== */
+.cs-grid-2 {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.5rem;
@@ -481,10 +442,12 @@ input:focus, textarea:focus, select:focus,
   }
 }
 
-.cs-grid-2 {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
+/* ==========================================================================
+   Animations
+   ========================================================================== */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 @media (min-width: 768px) {
@@ -493,23 +456,22 @@ input:focus, textarea:focus, select:focus,
   }
 }
 
-/* Accessible focus ring */
-button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
-  outline: 2px solid var(--ink-900);
-  outline-offset: 2px;
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+.animate-pulse {
+  animation: pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: var(--radius-full);
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);

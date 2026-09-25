@@ -13,10 +13,13 @@ const pool = new Pool({
 
 async function runMigration() {
     try {
-        const sqlPath = path.join(__dirname, '../database/migrations/017_trust_and_anti_gaming.sql');
-        const sql = fs.readFileSync(sqlPath, 'utf8');
-        await pool.query(sql);
-        console.log('Migration 017 successfully applied.');
+        const sqlPath018 = path.join(__dirname, '../database/migrations/018_problem_evidence.sql');
+        await pool.query(fs.readFileSync(sqlPath018, 'utf8'));
+        console.log('Migration 018 successfully applied.');
+
+        const sqlPath020 = path.join(__dirname, '../database/migrations/020_institutional_projects.sql');
+        await pool.query(fs.readFileSync(sqlPath020, 'utf8'));
+        console.log('Migration 020 successfully applied.');
     } catch (err) {
         console.error('Migration failed:', err);
     } finally {

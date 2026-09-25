@@ -1,361 +1,553 @@
+import { useState } from "react";
 import { Icon } from "../components/common/Icons";
 import { Button } from "../components/common/Button";
-import { Card } from "../components/common/Cards";
 import { useRouter } from "../context/useRouter.js";
 import { useAuth } from "../context/useAuth.js";
+
+// Language toggle state
+const LANGS = [
+  { code: "en", label: "EN" },
+  { code: "hi", label: "हि" },
+];
+
+const COPY = {
+  en: {
+    badge: "CIVIC INNOVATION",
+    hero1: "Real problems,",
+    hero2: "solved together.",
+    sub: "CivicSync connects citizens, universities, and government institutions to solve India's most pressing societal challenges through AI-powered matching and transparent accountability.",
+    cta1: "Get Started",
+    cta2: "Sign In",
+    stat1: "Active Challenges",
+    stat2: "Institutions",
+    stat3: "Solutions Delivered",
+    how: "How It Works",
+    stakeholders: "Stakeholders",
+    governance: "Governance Pipeline",
+    step1t: "Citizens Report",
+    step1d: "A problem is flagged in any district — water, roads, health, education.",
+    step2t: "AI Analyses",
+    step2d: "Our AI engine classifies the challenge, identifies required expertise, and finds matching institutions.",
+    step3t: "Teams Form",
+    step3d: "Universities, researchers, startups, and government bodies collaborate in a shared workspace.",
+    step4t: "Impact Verified",
+    step4d: "Solutions are tested, evidence is submitted, and outcomes are publicly tracked.",
+    rolesTitle: "Built for Every Stakeholder",
+    roles: [
+      { icon: "users", title: "Citizens", desc: "Report real local problems. Track resolution status. Validate outcomes." },
+      { icon: "graduation-cap", title: "Universities", desc: "Match challenges to faculty expertise. Create institutional project workspaces." },
+      { icon: "briefcase", title: "Industry", desc: "Collaborate on pilot projects. Fund research. Drive commercialization." },
+      { icon: "shield-check", title: "Government", desc: "Monitor challenges across districts. Approve implementations. Measure verified impact." },
+    ],
+    govTitle: "Governance Pipeline",
+    govDesc: "Every problem follows a transparent, auditable lifecycle — from citizen report to verified real-world impact.",
+    govStages: ["Reported", "AI Analysed", "Matched", "In Project", "Under Review", "Impact Verified"],
+    footer: "CivicSync · Smart India Hackathon 2026 · PS-26043",
+  },
+  hi: {
+    badge: "नागरिक नवाचार",
+    hero1: "असली समस्याएं,",
+    hero2: "मिलकर सुलझाएं।",
+    sub: "CivicSync नागरिकों, विश्वविद्यालयों और सरकारी संस्थाओं को AI-संचालित मिलान और पारदर्शी जवाबदेही के माध्यम से जोड़ता है।",
+    cta1: "शुरू करें",
+    cta2: "साइन इन",
+    stat1: "सक्रिय चुनौतियाँ",
+    stat2: "संस्थाएं",
+    stat3: "समाधान वितरित",
+    how: "यह कैसे काम करता है",
+    stakeholders: "हितधारक",
+    governance: "शासन पाइपलाइन",
+    step1t: "नागरिक रिपोर्ट करते हैं",
+    step1d: "किसी भी जिले में समस्या दर्ज की जाती है — पानी, सड़क, स्वास्थ्य, शिक्षा।",
+    step2t: "AI विश्लेषण करती है",
+    step2d: "AI इंजन चुनौती को वर्गीकृत करता है और मिलान संस्थाएं खोजता है।",
+    step3t: "टीमें बनती हैं",
+    step3d: "विश्वविद्यालय, शोधकर्ता, स्टार्टअप और सरकारी निकाय साझा कार्यस्थल में सहयोग करते हैं।",
+    step4t: "प्रभाव सत्यापित",
+    step4d: "समाधानों का परीक्षण किया जाता है, साक्ष्य प्रस्तुत किए जाते हैं और परिणाम सार्वजनिक रूप से ट्रैक किए जाते हैं।",
+    rolesTitle: "हर हितधारक के लिए निर्मित",
+    roles: [
+      { icon: "users", title: "नागरिक", desc: "स्थानीय समस्याएं रिपोर्ट करें। समाधान स्थिति ट्रैक करें।" },
+      { icon: "graduation-cap", title: "विश्वविद्यालय", desc: "शिक्षकों की विशेषज्ञता से चुनौतियां मिलाएं।" },
+      { icon: "briefcase", title: "उद्योग", desc: "पायलट परियोजनाओं में सहयोग करें।" },
+      { icon: "shield-check", title: "सरकार", desc: "जिलों में चुनौतियों की निगरानी करें।" },
+    ],
+    govTitle: "शासन पाइपलाइन",
+    govDesc: "प्रत्येक समस्या एक पारदर्शी, ऑडिट योग्य जीवनचक्र का अनुसरण करती है।",
+    govStages: ["रिपोर्ट की", "AI विश्लेषण", "मिलान", "परियोजना में", "समीक्षाधीन", "प्रभाव सत्यापित"],
+    footer: "CivicSync · स्मार्ट इंडिया हैकाथॉन 2026 · PS-26043",
+  },
+};
+
+// Pill-style stat
+function StatPill({ value, label }) {
+  return (
+    <div style={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: "0.15rem",
+    }}>
+      <span style={{ fontSize: "1.6rem", fontWeight: 900, letterSpacing: "-0.04em", color: "#0a0a0a", lineHeight: 1 }}>
+        {value}
+      </span>
+      <span style={{ fontSize: "0.75rem", color: "#6e6e6e", fontWeight: 500, letterSpacing: "0.02em" }}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+// Step card for "How It Works"
+function StepCard({ num, title, desc }) {
+  return (
+    <div style={{
+      padding: "1.75rem",
+      background: "#ffffff",
+      border: "1px solid #e8e5df",
+      borderRadius: "16px",
+      transition: "box-shadow 0.2s",
+    }}
+    onMouseEnter={e => e.currentTarget.style.boxShadow = "0 8px 24px -4px rgba(10,10,10,0.10)"}
+    onMouseLeave={e => e.currentTarget.style.boxShadow = "none"}
+    >
+      <div style={{
+        width: "36px", height: "36px",
+        background: "#0a0a0a",
+        borderRadius: "8px",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        color: "#ffffff",
+        fontSize: "0.85rem",
+        fontWeight: 800,
+        marginBottom: "1.25rem",
+      }}>
+        {String(num).padStart(2, "0")}
+      </div>
+      <h4 style={{ margin: "0 0 0.5rem", fontSize: "1rem", fontWeight: 700, letterSpacing: "-0.02em", color: "#0a0a0a" }}>
+        {title}
+      </h4>
+      <p style={{ margin: 0, fontSize: "0.875rem", color: "#6e6e6e", lineHeight: 1.6 }}>
+        {desc}
+      </p>
+    </div>
+  );
+}
 
 export function LandingPage() {
   const { navigate } = useRouter();
   const { isAuthenticated } = useAuth();
+  const [lang, setLang] = useState("en");
+  const c = COPY[lang];
 
   return (
-    <div style={{ backgroundColor: "#fafafb", minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "'Inter', sans-serif" }}>
-      {/* Navigation Header */}
-      <header
-        style={{
-          borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
-          padding: "1rem 2rem",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          maxWidth: "1400px",
-          width: "100%",
-          margin: "0 auto",
-          backgroundColor: "#ffffff",
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <div
-            style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "var(--radius-md)",
-              backgroundColor: "var(--color-primary)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#ffffff",
-              boxShadow: "0 2px 8px rgba(37, 99, 235, 0.3)",
-            }}
-          >
-            <Icon name="shield-check" size={20} />
+    <div style={{ backgroundColor: "#faf9f6", minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "'Inter', sans-serif" }}>
+
+      {/* ── Navigation ──────────────────────────────────────────────── */}
+      <header style={{
+        background: "rgba(250, 249, 246, 0.92)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        borderBottom: "1px solid #e8e5df",
+        padding: "0 2rem",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        height: "60px",
+        position: "sticky",
+        top: 0,
+        zIndex: 100,
+        maxWidth: "100%",
+      }}>
+        {/* Logo */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+          <div style={{
+            width: "32px", height: "32px",
+            background: "#0a0a0a",
+            borderRadius: "8px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "#ffffff",
+          }}>
+            <Icon name="shield-check" size={18} />
           </div>
-          <div>
-            <span style={{ fontWeight: 800, fontSize: "1.2rem", color: "var(--text-primary)" }}>
-              CivicSync
-            </span>
-          </div>
+          <span style={{ fontWeight: 800, fontSize: "1.1rem", color: "#0a0a0a", letterSpacing: "-0.03em" }}>
+            CivicSync
+          </span>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+        {/* Center nav links */}
+        <nav style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+          {[
+            { label: c.how, id: "how-it-works" },
+            { label: c.stakeholders, id: "stakeholders" },
+            { label: c.governance, id: "governance" },
+          ].map(item => (
+            <a
+              key={item.id}
+              href={`#${item.id}`}
+              style={{
+                fontSize: "0.82rem",
+                fontWeight: 500,
+                color: "#3d3d3d",
+                padding: "0.4rem 0.75rem",
+                borderRadius: "8px",
+                transition: "background 0.15s, color 0.15s",
+              }}
+              onMouseEnter={e => { e.target.style.background = "#f0ede6"; e.target.style.color = "#0a0a0a"; }}
+              onMouseLeave={e => { e.target.style.background = "transparent"; e.target.style.color = "#3d3d3d"; }}
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
+
+        {/* Right side: lang toggle + auth */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          {/* Language toggle */}
+          <div style={{
+            display: "flex", alignItems: "center",
+            background: "#f0ede6",
+            borderRadius: "8px",
+            padding: "3px",
+            gap: "2px",
+          }}>
+            {LANGS.map(l => (
+              <button
+                key={l.code}
+                onClick={() => setLang(l.code)}
+                style={{
+                  fontSize: "0.72rem",
+                  fontWeight: 700,
+                  padding: "0.25rem 0.6rem",
+                  borderRadius: "6px",
+                  border: "none",
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                  background: lang === l.code ? "#0a0a0a" : "transparent",
+                  color: lang === l.code ? "#ffffff" : "#6e6e6e",
+                }}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+
           {isAuthenticated ? (
             <Button variant="primary" size="sm" onClick={() => navigate("/dashboard")}>
-              Go to Dashboard
+              Dashboard →
             </Button>
           ) : (
             <>
               <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>
-                Sign In
+                {c.cta2}
               </Button>
               <Button variant="primary" size="sm" onClick={() => navigate("/register")}>
-                Get Started
+                {c.cta1}
               </Button>
             </>
           )}
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section
-        style={{
-          padding: "6rem 2rem 5rem",
-          maxWidth: "1400px",
-          margin: "0 auto",
-          width: "100%",
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "4rem",
-          alignItems: "center",
-          background: "radial-gradient(ellipse at top right, rgba(224, 231, 255, 0.5), transparent 60%), radial-gradient(ellipse at bottom left, rgba(238, 242, 255, 0.5), transparent 60%)",
-        }}
-      >
-        {/* Left Side: Content */}
-        <div style={{ paddingRight: "2rem" }}>
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              padding: "0.4rem 1rem",
-              backgroundColor: "rgba(37, 99, 235, 0.05)",
-              color: "var(--color-primary)",
-              borderRadius: "var(--radius-full)",
-              fontSize: "0.85rem",
-              fontWeight: 700,
-              letterSpacing: "0.05em",
-              marginBottom: "1.5rem",
-              border: "1px solid rgba(37, 99, 235, 0.1)",
-              textTransform: "uppercase"
-            }}
-          >
-            <Icon name="award" size={14} />
-            <span>Smart India Hackathon 2026</span>
+      {/* ── Hero Section ─────────────────────────────────────────────── */}
+      <section style={{
+        padding: "5rem 2rem 4rem",
+        maxWidth: "1200px",
+        margin: "0 auto",
+        width: "100%",
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: "4rem",
+        alignItems: "center",
+      }}>
+        {/* Left: Text */}
+        <div>
+          {/* CIVIC INNOVATION badge */}
+          <div style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            padding: "0.35rem 0.9rem",
+            background: "#0a0a0a",
+            color: "#ffffff",
+            borderRadius: "999px",
+            fontSize: "0.7rem",
+            fontWeight: 800,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            marginBottom: "1.75rem",
+          }}>
+            <Icon name="award" size={12} />
+            <span>{c.badge}</span>
           </div>
 
-          <h1
-            style={{
-              fontSize: "clamp(2.5rem, 5vw, 4rem)",
-              fontWeight: 900,
-              letterSpacing: "-0.04em",
-              color: "#0f172a", // Deep navy
-              margin: "0 0 1.5rem",
-              lineHeight: 1.1,
-            }}
-          >
-            Real Problems.<br />
-            Right Expertise.<br />
-            <span style={{ 
-              background: "linear-gradient(135deg, var(--color-primary) 0%, #6366f1 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}>
-              Measurable Impact.
-            </span>
+          <h1 style={{
+            fontSize: "clamp(2.8rem, 5.5vw, 4.5rem)",
+            fontWeight: 900,
+            letterSpacing: "-0.05em",
+            color: "#0a0a0a",
+            margin: "0 0 1.25rem",
+            lineHeight: 1.05,
+          }}>
+            {c.hero1}<br />
+            {c.hero2}
           </h1>
 
-          <p
-            style={{
-              fontSize: "clamp(1.1rem, 2vw, 1.25rem)",
-              color: "#475569",
-              margin: "0 0 2.5rem",
-              maxWidth: "540px",
-              lineHeight: 1.6,
-              fontWeight: 400,
-            }}
-          >
-            CivicSync connects societal challenges with the right people, expertise, and organizations — from citizen reporting to verified real-world impact.
+          <p style={{
+            fontSize: "1.05rem",
+            color: "#4a4a4a",
+            margin: "0 0 2.5rem",
+            maxWidth: "480px",
+            lineHeight: 1.7,
+            fontWeight: 400,
+          }}>
+            {c.sub}
           </p>
 
-          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginBottom: "3rem" }}>
             <Button
               variant="primary"
               size="lg"
-              onClick={() => navigate(isAuthenticated ? "/report" : "/login")}
-              style={{ padding: "1rem 2rem", fontSize: "1rem", borderRadius: "var(--radius-full)" }}
+              onClick={() => navigate(isAuthenticated ? "/report" : "/register")}
             >
-              Report a Problem &rarr;
+              {c.cta1} →
             </Button>
             <Button
               variant="outline"
               size="lg"
               onClick={() => navigate("/explore")}
-              style={{ padding: "1rem 2rem", fontSize: "1rem", borderRadius: "var(--radius-full)", backgroundColor: "#ffffff" }}
             >
               Explore Challenges
             </Button>
           </div>
+
+          {/* Stats row */}
+          <div style={{
+            display: "flex",
+            gap: "2.5rem",
+            paddingTop: "2rem",
+            borderTop: "1px solid #e8e5df",
+          }}>
+            <StatPill value="2,400+" label={c.stat1} />
+            <StatPill value="180+" label={c.stat2} />
+            <StatPill value="340+" label={c.stat3} />
+          </div>
         </div>
 
-        {/* Right Side: Visual */}
-        <div style={{ position: "relative", width: "100%", height: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
-          {/* Main Visual Card */}
-          <div
-            style={{
-              width: "100%",
-              maxWidth: "480px",
-              backgroundColor: "#ffffff",
-              borderRadius: "var(--radius-2xl)",
-              border: "1px solid rgba(0,0,0,0.05)",
-              padding: "2.5rem",
-              boxShadow: "0 20px 40px rgba(0, 0, 0, 0.04)",
-              position: "relative",
-              zIndex: 1,
-            }}
-          >
-            <div style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-muted)", letterSpacing: "0.1em", marginBottom: "2rem" }}>
-              CIVICSYNC INTELLIGENCE
+        {/* Right: Civic Report Showcase Card */}
+        <div style={{
+          background: "#ffffff",
+          borderRadius: "20px",
+          border: "1px solid #e8e5df",
+          overflow: "hidden",
+          boxShadow: "0 20px 60px -10px rgba(10,10,10,0.12)",
+        }}>
+          {/* Card header */}
+          <div style={{
+            padding: "1rem 1.25rem",
+            borderBottom: "1px solid #f0ede6",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <div style={{
+                width: "8px", height: "8px", borderRadius: "50%",
+                background: "#2d7a4f",
+                boxShadow: "0 0 0 3px rgba(45,122,79,0.15)",
+              }} />
+              <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#0a0a0a", letterSpacing: "-0.01em" }}>
+                CivicSync Intelligence
+              </span>
+            </div>
+            <span style={{
+              fontSize: "0.65rem", fontWeight: 700, color: "#6e6e6e",
+              textTransform: "uppercase", letterSpacing: "0.08em",
+            }}>
+              LIVE
+            </span>
+          </div>
+
+          {/* Challenge card */}
+          <div style={{ padding: "1.25rem" }}>
+            {/* Report submitted */}
+            <div style={{
+              padding: "1rem",
+              background: "#faf9f6",
+              borderRadius: "12px",
+              border: "1px solid #e8e5df",
+              marginBottom: "0.75rem",
+            }}>
+              <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "#6e6e6e", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.35rem" }}>
+                Citizen Challenge
+              </div>
+              <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "#0a0a0a", marginBottom: "0.25rem" }}>
+                Unsafe Drinking Water
+              </div>
+              <div style={{ fontSize: "0.78rem", color: "#6e6e6e" }}>
+                Dhanbad District · 5,200 affected
+              </div>
             </div>
 
-            {/* Step 1 */}
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem", marginBottom: "1.5rem" }}>
-              <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: "rgba(37, 99, 235, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-primary)" }}>
-                <Icon name="user" size={16} />
-              </div>
-              <div>
-                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#0f172a" }}>Citizen Challenge</div>
-                <div style={{ fontSize: "0.9rem", color: "#64748b", marginTop: "0.25rem" }}>Unsafe Drinking Water</div>
-              </div>
-            </div>
-
-            <div style={{ width: "2px", height: "24px", backgroundColor: "rgba(0,0,0,0.05)", marginLeft: "15px", marginBottom: "1.5rem" }} />
-
-            {/* Step 2 */}
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem", marginBottom: "1.5rem" }}>
-              <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: "rgba(139, 92, 246, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#8b5cf6" }}>
-                <Icon name="cpu" size={16} />
-              </div>
-              <div>
-                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#0f172a" }}>AI Analysis</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginTop: "0.5rem" }}>
-                  <span style={{ fontSize: "0.7rem", padding: "0.2rem 0.6rem", backgroundColor: "#f1f5f9", borderRadius: "100px", color: "#475569" }}>Water Quality</span>
-                  <span style={{ fontSize: "0.7rem", padding: "0.2rem 0.6rem", backgroundColor: "#f1f5f9", borderRadius: "100px", color: "#475569" }}>Env. Engineering</span>
-                  <span style={{ fontSize: "0.7rem", padding: "0.2rem 0.6rem", backgroundColor: "#f1f5f9", borderRadius: "100px", color: "#475569" }}>IoT</span>
+            {/* AI pipeline steps */}
+            {[
+              { label: "AI Analysis", value: "Water Quality · Env. Engineering · IoT", icon: "cpu" },
+              { label: "Academic Expertise", value: "3 Faculty · 12 Students matched", icon: "graduation-cap" },
+              { label: "Project Workspace", value: "ISM Dhanbad · Active", icon: "briefcase" },
+              { label: "Solution → Impact", value: "Pilot running · Evidence submitted", icon: "check-circle" },
+            ].map((step, i) => (
+              <div key={i} style={{
+                display: "flex", alignItems: "flex-start", gap: "0.75rem",
+                padding: "0.75rem 0",
+                borderBottom: i < 3 ? "1px solid #f0ede6" : "none",
+              }}>
+                <div style={{
+                  width: "28px", height: "28px",
+                  background: i === 3 ? "#0a0a0a" : "#f5f4f1",
+                  borderRadius: "6px",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                }}>
+                  <Icon name={step.icon} size={13} color={i === 3 ? "#ffffff" : "#3d3d3d"} />
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "#6e6e6e", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                    {step.label}
+                  </div>
+                  <div style={{ fontSize: "0.82rem", color: "#0a0a0a", fontWeight: 600, marginTop: "0.15rem" }}>
+                    {step.value}
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div style={{ width: "2px", height: "24px", backgroundColor: "rgba(0,0,0,0.05)", marginLeft: "15px", marginBottom: "1.5rem" }} />
-
-            {/* Step 3 */}
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem", marginBottom: "1.5rem" }}>
-              <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: "rgba(16, 185, 129, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#10b981" }}>
-                <Icon name="users" size={16} />
-              </div>
-              <div>
-                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#0f172a" }}>Academic Expertise</div>
-                <div style={{ fontSize: "0.9rem", color: "#64748b", marginTop: "0.25rem" }}>Faculty + Students</div>
-              </div>
-            </div>
-
-            <div style={{ width: "2px", height: "24px", backgroundColor: "rgba(0,0,0,0.05)", marginLeft: "15px", marginBottom: "1.5rem" }} />
-
-            {/* Step 4 */}
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
-              <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: "rgba(245, 158, 11, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#f59e0b" }}>
-                <Icon name="check-circle" size={16} />
-              </div>
-              <div style={{ display: "flex", alignItems: "center", height: "32px" }}>
-                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#0f172a" }}>Solution &rarr; Impact</div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Floating Card 1 */}
-          <div style={{
-            position: "absolute",
-            top: "10%",
-            right: "-5%",
-            backgroundColor: "#ffffff",
-            padding: "1rem",
-            borderRadius: "var(--radius-lg)",
-            boxShadow: "0 10px 25px rgba(0,0,0,0.06)",
-            border: "1px solid rgba(0,0,0,0.02)",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.75rem",
-            zIndex: 2,
-          }}>
-            <div style={{ width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "rgba(139, 92, 246, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#8b5cf6" }}>
-              <Icon name="sparkles" size={16} />
-            </div>
-            <div>
-              <div style={{ fontSize: "0.75rem", fontWeight: 800, color: "#0f172a" }}>AI Insight</div>
-              <div style={{ fontSize: "0.75rem", color: "#64748b" }}>3 expertise areas identified</div>
-            </div>
-          </div>
-
-          {/* Floating Card 2 */}
-          <div style={{
-            position: "absolute",
-            bottom: "20%",
-            left: "-10%",
-            backgroundColor: "#ffffff",
-            padding: "1rem",
-            borderRadius: "var(--radius-lg)",
-            boxShadow: "0 10px 25px rgba(0,0,0,0.06)",
-            border: "1px solid rgba(0,0,0,0.02)",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.75rem",
-            zIndex: 2,
-          }}>
-            <div style={{ width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "rgba(16, 185, 129, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#10b981" }}>
-              <Icon name="target" size={16} />
-            </div>
-            <div>
-              <div style={{ fontSize: "0.75rem", fontWeight: 800, color: "#0f172a" }}>Expertise Match</div>
-              <div style={{ fontSize: "0.75rem", color: "#64748b" }}>Faculty + Students</div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Capability Strip */}
-      <div style={{ borderTop: "1px solid rgba(0,0,0,0.05)", borderBottom: "1px solid rgba(0,0,0,0.05)", backgroundColor: "#ffffff", padding: "1.5rem" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", justifyContent: "center", alignItems: "center", gap: "2rem", flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#64748b", fontSize: "0.9rem", fontWeight: 500 }}>
-            <Icon name="cpu" size={16} /> AI Challenge Intelligence
-          </div>
-          <div style={{ color: "#cbd5e1" }}>&bull;</div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#64748b", fontSize: "0.9rem", fontWeight: 500 }}>
-            <Icon name="users" size={16} /> Explainable Expertise Matching
-          </div>
-          <div style={{ color: "#cbd5e1" }}>&bull;</div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#64748b", fontSize: "0.9rem", fontWeight: 500 }}>
-            <Icon name="git-branch" size={16} /> Collaborative Solutions
-          </div>
-          <div style={{ color: "#cbd5e1" }}>&bull;</div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#64748b", fontSize: "0.9rem", fontWeight: 500 }}>
-            <Icon name="check-circle" size={16} /> Verified Impact
-          </div>
+      {/* ── Marquee strip ────────────────────────────────────────────── */}
+      <div style={{
+        borderTop: "1px solid #e8e5df",
+        borderBottom: "1px solid #e8e5df",
+        padding: "0.85rem 0",
+        background: "#f5f4f1",
+        overflow: "hidden",
+      }}>
+        <div style={{
+          display: "flex",
+          gap: "3rem",
+          justifyContent: "center",
+          flexWrap: "wrap",
+          padding: "0 2rem",
+        }}>
+          {["AI Challenge Intelligence", "Explainable Expertise Matching", "Collaborative Solutions", "Verified Real-World Impact", "Governance Pipeline", "Multi-Stakeholder Platform"].map((item, i) => (
+            <span key={i} style={{
+              fontSize: "0.78rem",
+              fontWeight: 600,
+              color: "#6e6e6e",
+              letterSpacing: "0.02em",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              whiteSpace: "nowrap",
+            }}>
+              <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "#c4c0b8", display: "inline-block" }} />
+              {item}
+            </span>
+          ))}
         </div>
       </div>
 
-      {/* Second Section: Workflow */}
-      <section
-        style={{
-          padding: "6rem 2rem 6rem",
-          backgroundColor: "#ffffff",
-        }}
-      >
+      {/* ── How It Works ─────────────────────────────────────────────── */}
+      <section id="how-it-works" style={{
+        padding: "5rem 2rem",
+        maxWidth: "1200px",
+        margin: "0 auto",
+        width: "100%",
+      }}>
+        <div style={{ marginBottom: "3rem" }}>
+          <div style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.4rem",
+            fontSize: "0.7rem",
+            fontWeight: 800,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            color: "#6e6e6e",
+            marginBottom: "1rem",
+          }}>
+            <span style={{ width: "16px", height: "1px", background: "#c4c0b8", display: "inline-block" }} />
+            {c.how}
+          </div>
+          <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontWeight: 900, color: "#0a0a0a", margin: "0 0 0.75rem", letterSpacing: "-0.04em" }}>
+            From problem to verified impact
+          </h2>
+          <p style={{ color: "#6e6e6e", maxWidth: "520px", fontSize: "1rem", lineHeight: 1.6 }}>
+            A transparent, auditable pipeline connecting citizens to institutions — with AI at every step.
+          </p>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1rem" }}>
+          <StepCard num={1} title={c.step1t} desc={c.step1d} />
+          <StepCard num={2} title={c.step2t} desc={c.step2d} />
+          <StepCard num={3} title={c.step3t} desc={c.step3d} />
+          <StepCard num={4} title={c.step4t} desc={c.step4d} />
+        </div>
+      </section>
+
+      {/* ── Stakeholders ─────────────────────────────────────────────── */}
+      <section id="stakeholders" style={{
+        padding: "5rem 2rem",
+        background: "#f5f4f1",
+        borderTop: "1px solid #e8e5df",
+        borderBottom: "1px solid #e8e5df",
+      }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "4rem" }}>
-            <h2 style={{ fontSize: "2rem", fontWeight: 800, color: "#0f172a", margin: "0 0 1rem", letterSpacing: "-0.02em" }}>
-              How CivicSync Solves Societal Problems
+          <div style={{ marginBottom: "3rem" }}>
+            <div style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              fontSize: "0.7rem",
+              fontWeight: 800,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "#6e6e6e",
+              marginBottom: "1rem",
+            }}>
+              <span style={{ width: "16px", height: "1px", background: "#c4c0b8", display: "inline-block" }} />
+              {c.stakeholders}
+            </div>
+            <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontWeight: 900, color: "#0a0a0a", margin: 0, letterSpacing: "-0.04em" }}>
+              {c.rolesTitle}
             </h2>
-            <p style={{ color: "#64748b", fontSize: "1.1rem", maxWidth: "600px", margin: "0 auto" }}>
-              Moving beyond passive complaint portals into collaborative real-world problem execution.
-            </p>
           </div>
 
-          {/* Workflow Journey */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", position: "relative", gap: "1rem", flexWrap: "wrap" }}>
-            {/* Connecting Line (Desktop) */}
-            <div style={{ position: "absolute", top: "40px", left: "10%", right: "10%", height: "2px", background: "linear-gradient(90deg, rgba(37,99,235,0.1) 0%, rgba(37,99,235,0.3) 50%, rgba(37,99,235,0.1) 100%)", zIndex: 0 }} />
-
-            {[
-              { num: "01", title: "REPORT", desc: "Citizen reports a real problem", icon: "edit-3" },
-              { num: "02", title: "UNDERSTAND", desc: "AI structures the challenge", icon: "cpu" },
-              { num: "03", title: "MATCH", desc: "Find relevant expertise", icon: "users" },
-              { num: "04", title: "SOLVE", desc: "Collaborate and submit solutions", icon: "lightbulb" },
-              { num: "05", title: "IMPACT", desc: "Implement and measure results", icon: "star" },
-            ].map((step, index) => (
-              <div key={step.num} style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, minWidth: "150px", zIndex: 1, textAlign: "center", marginBottom: "2rem" }}>
-                <div style={{ 
-                  width: "80px", 
-                  height: "80px", 
-                  borderRadius: "var(--radius-xl)", 
-                  backgroundColor: "#ffffff", 
-                  border: "1px solid rgba(0,0,0,0.05)",
-                  boxShadow: "0 10px 25px rgba(0,0,0,0.03)",
-                  display: "flex", 
-                  flexDirection: "column",
-                  alignItems: "center", 
-                  justifyContent: "center", 
-                  marginBottom: "1.5rem",
-                  color: "var(--color-primary)",
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1rem" }}>
+            {c.roles.map((role, i) => (
+              <div key={i} style={{
+                padding: "1.75rem",
+                background: "#ffffff",
+                border: "1px solid #e8e5df",
+                borderRadius: "16px",
+                transition: "box-shadow 0.2s",
+              }}
+              onMouseEnter={e => e.currentTarget.style.boxShadow = "0 8px 24px -4px rgba(10,10,10,0.10)"}
+              onMouseLeave={e => e.currentTarget.style.boxShadow = "none"}
+              >
+                <div style={{
+                  width: "40px", height: "40px",
+                  background: "#f5f4f1",
+                  borderRadius: "10px",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  marginBottom: "1.25rem",
                 }}>
-                   <Icon name={step.icon} size={24} />
-                   <div style={{ fontSize: "0.65rem", fontWeight: 800, marginTop: "0.3rem", color: "#94a3b8" }}>{step.num}</div>
+                  <Icon name={role.icon} size={20} color="#0a0a0a" />
                 </div>
-                <h3 style={{ fontSize: "0.95rem", fontWeight: 800, color: "#0f172a", margin: "0 0 0.5rem", letterSpacing: "0.05em" }}>{step.title}</h3>
-                <p style={{ fontSize: "0.85rem", color: "#64748b", margin: 0, maxWidth: "160px" }}>
-                  {step.desc}
+                <h4 style={{ margin: "0 0 0.5rem", fontSize: "1rem", fontWeight: 700, color: "#0a0a0a", letterSpacing: "-0.02em" }}>
+                  {role.title}
+                </h4>
+                <p style={{ margin: 0, fontSize: "0.875rem", color: "#6e6e6e", lineHeight: 1.6 }}>
+                  {role.desc}
                 </p>
               </div>
             ))}
@@ -363,20 +555,160 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Simple Footer */}
-      <footer
-        style={{
-          marginTop: "auto",
-          borderTop: "1px solid rgba(0,0,0,0.05)",
-          backgroundColor: "#fafafb",
-          padding: "3rem 2rem",
-          textAlign: "center",
-        }}
-      >
-        <div style={{ fontWeight: 700, color: "#0f172a", marginBottom: "0.5rem" }}>CivicSync — Built for Smart India Hackathon (SIH 2026)</div>
-        <div style={{ fontSize: "0.85rem", color: "#64748b", maxWidth: "500px", margin: "0 auto" }}>
-          Empowering citizens, institutions, students, researchers, and authorities to solve real societal challenges.
+      {/* ── Governance Pipeline ──────────────────────────────────────── */}
+      <section id="governance" style={{
+        padding: "5rem 2rem",
+        maxWidth: "1200px",
+        margin: "0 auto",
+        width: "100%",
+      }}>
+        <div style={{ marginBottom: "3rem" }}>
+          <div style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.4rem",
+            fontSize: "0.7rem",
+            fontWeight: 800,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            color: "#6e6e6e",
+            marginBottom: "1rem",
+          }}>
+            <span style={{ width: "16px", height: "1px", background: "#c4c0b8", display: "inline-block" }} />
+            {c.governance}
+          </div>
+          <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontWeight: 900, color: "#0a0a0a", margin: "0 0 0.75rem", letterSpacing: "-0.04em" }}>
+            {c.govTitle}
+          </h2>
+          <p style={{ color: "#6e6e6e", maxWidth: "520px", fontSize: "1rem", lineHeight: 1.6 }}>
+            {c.govDesc}
+          </p>
         </div>
+
+        {/* Pipeline stages */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "0",
+          background: "#ffffff",
+          border: "1px solid #e8e5df",
+          borderRadius: "16px",
+          padding: "0",
+          overflow: "hidden",
+        }}>
+          {c.govStages.map((stage, i) => (
+            <div key={i} style={{
+              flex: 1,
+              padding: "1.25rem 1rem",
+              borderRight: i < c.govStages.length - 1 ? "1px solid #f0ede6" : "none",
+              background: i === c.govStages.length - 1 ? "#0a0a0a" : "#ffffff",
+              textAlign: "center",
+              transition: "background 0.2s",
+            }}>
+              <div style={{
+                fontSize: "0.68rem",
+                fontWeight: 800,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                color: i === c.govStages.length - 1 ? "#ffffff" : "#9e9e9e",
+                marginBottom: "0.35rem",
+              }}>
+                {String(i + 1).padStart(2, "0")}
+              </div>
+              <div style={{
+                fontSize: "0.85rem",
+                fontWeight: 700,
+                color: i === c.govStages.length - 1 ? "#ffffff" : "#0a0a0a",
+                letterSpacing: "-0.01em",
+              }}>
+                {stage}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── CTA Banner ───────────────────────────────────────────────── */}
+      <div style={{
+        background: "#0a0a0a",
+        padding: "4rem 2rem",
+        textAlign: "center",
+      }}>
+        <div style={{ maxWidth: "600px", margin: "0 auto" }}>
+          <h2 style={{ color: "#ffffff", fontWeight: 900, fontSize: "clamp(1.8rem, 3vw, 2.5rem)", letterSpacing: "-0.04em", margin: "0 0 1rem" }}>
+            Join the civic innovation movement
+          </h2>
+          <p style={{ color: "#9e9e9e", fontSize: "1rem", marginBottom: "2rem" }}>
+            Citizens, institutions, researchers, and government — solving India's challenges together.
+          </p>
+          <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
+            <button
+              onClick={() => navigate("/register")}
+              style={{
+                padding: "0.875rem 2rem",
+                background: "#ffffff",
+                color: "#0a0a0a",
+                border: "none",
+                borderRadius: "12px",
+                fontWeight: 700,
+                fontSize: "0.9rem",
+                cursor: "pointer",
+                transition: "opacity 0.15s",
+              }}
+              onMouseEnter={e => e.target.style.opacity = "0.85"}
+              onMouseLeave={e => e.target.style.opacity = "1"}
+            >
+              {c.cta1} →
+            </button>
+            <button
+              onClick={() => navigate("/login")}
+              style={{
+                padding: "0.875rem 2rem",
+                background: "transparent",
+                color: "#9e9e9e",
+                border: "1px solid #2e2d29",
+                borderRadius: "12px",
+                fontWeight: 600,
+                fontSize: "0.9rem",
+                cursor: "pointer",
+                transition: "border-color 0.15s, color 0.15s",
+              }}
+              onMouseEnter={e => { e.target.style.borderColor = "#5c5a54"; e.target.style.color = "#ffffff"; }}
+              onMouseLeave={e => { e.target.style.borderColor = "#2e2d29"; e.target.style.color = "#9e9e9e"; }}
+            >
+              {c.cta2}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Footer ───────────────────────────────────────────────────── */}
+      <footer style={{
+        borderTop: "1px solid #e8e5df",
+        padding: "1.5rem 2rem",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        background: "#faf9f6",
+        flexWrap: "wrap",
+        gap: "0.5rem",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <div style={{
+            width: "24px", height: "24px",
+            background: "#0a0a0a",
+            borderRadius: "5px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <Icon name="shield-check" size={13} color="#ffffff" />
+          </div>
+          <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#0a0a0a", letterSpacing: "-0.01em" }}>
+            CivicSync
+          </span>
+        </div>
+        <span style={{ fontSize: "0.75rem", color: "#9e9e9e" }}>
+          {c.footer}
+        </span>
       </footer>
     </div>
   );

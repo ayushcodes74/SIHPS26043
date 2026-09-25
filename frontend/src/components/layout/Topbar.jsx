@@ -303,27 +303,29 @@ export function Topbar() {
       {/* Right Action Zone: Language Selector, Notifications, User Profile */}
       <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
         {/* Dark Mode Toggle */}
-        <button
-          type="button"
-          onClick={toggleTheme}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "#ffffff",
-            color: "var(--text-primary)",
-            borderRadius: "var(--radius-full)",
-            padding: "0.6rem",
-            border: "1px solid var(--border-color)",
-            boxShadow: "var(--shadow-xs)",
-            cursor: "pointer",
-            transition: "all var(--transition-fast)",
-          }}
-          title={theme === 'dark' ? "Switch to Light Mode" : "Switch to Dark Mode"}
-          aria-label="Toggle Dark Mode"
-        >
-          <Icon name={theme === 'dark' ? "sun" : "moon"} size={20} />
-        </button>
+        {role !== 'CITIZEN' && (
+          <button
+            type="button"
+            onClick={toggleTheme}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "#ffffff",
+              color: "var(--text-primary)",
+              borderRadius: "var(--radius-full)",
+              padding: "0.6rem",
+              border: "1px solid var(--border-color)",
+              boxShadow: "var(--shadow-xs)",
+              cursor: "pointer",
+              transition: "all var(--transition-fast)",
+            }}
+            title={theme === 'dark' ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            aria-label="Toggle Dark Mode"
+          >
+            <Icon name={theme === 'dark' ? "sun" : "moon"} size={20} />
+          </button>
+        )}
 
         {/* Language Selector (EN | हिन्दी) */}
         <div

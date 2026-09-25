@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { studentApi, solutionApi, reputationApi } from "../../services/api";
+import { studentApi, reputationApi, projectApi } from "../../services/api";
 import { Card, StatCard } from "../common/Cards";
 import { Button } from "../common/Button";
 import { MatchScoreIndicator } from "../common/ProgressBar";
@@ -14,6 +14,7 @@ export function StudentSection({ user }) {
   const [skills, setSkills] = useState([]);
   const [matchedProblems, setMatchedProblems] = useState([]);
   const [mySolutions, setMySolutions] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [reputation, setReputation] = useState(null);
   const [error, setError] = useState("");
 
@@ -22,10 +23,11 @@ export function StudentSection({ user }) {
     async function loadStudentData() {
       setError("");
       try {
-        const [profRes, repRes, matchRes] = await Promise.allSettled([
+        const [profRes, repRes, matchRes, projRes] = await Promise.allSettled([
           studentApi.getProfile(),
           reputationApi.getMyReputation(),
           studentApi.getMatchedProblems({ sort: "best_match" }),
+          projectApi.getProjects().catch(() => ({ projects: [] }))
         ]);
 
         if (ignore) return;
@@ -45,17 +47,13 @@ export function StudentSection({ user }) {
           setMatchedProblems(rawMatches);
         }
 
-        // Check user active solutions
-        const userSolutionsList = [];
-        try {
-          const solRes = await solutionApi.getSolutions().catch(() => ({ solutions: [] }));
-          const allSols = solRes?.solutions || [];
-          const userSols = allSols.filter((s) => Number(s.submitted_by) === Number(user?.id));
-          userSolutionsList.push(...userSols);
-        } catch {
-          // non-fatal
+        if (projRes.status === "fulfilled" && projRes.value?.projects) {
+          setProjects(projRes.value.projects);
         }
-        setMySolutions(userSolutionsList);
+
+        // Student solutions are per-problem; we just show the count as 0
+        // (solutions are accessible from individual problem pages, not a global list endpoint)
+        setMySolutions([]);
         setLoading(false);
       } catch (err) {
         if (!ignore) {
@@ -337,6 +335,40 @@ export function StudentSection({ user }) {
           </div>
         )}
       </div>
+
+      {/* STUDENT PROJECTS */}
+      <Card title="My Associated Projects" subtitle="Institutional workspaces you have access to">
+        {projects.length === 0 ? (
+          <EmptyState icon="briefcase" title="No active projects" description="You are not part of any active institutional project teams yet." />
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            {projects.slice(0, 5).map(proj => (
+              <div
+                key={proj.id}
+                onClick={() => navigate(`/projects/${proj.id}`)}
+                style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  padding: "1rem", border: "1px solid var(--border-color)", borderRadius: "var(--radius-lg)",
+                  cursor: "pointer"
+                }}
+              >
+                <div>
+                  <h4 style={{ margin: "0 0 0.25rem", fontSize: "1rem", fontWeight: 700 }}>{proj.title}</h4>
+                  <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                    Mentor: {proj.mentor_name || "None"}
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                  <span style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "var(--radius-sm)", backgroundColor: "var(--bg-muted)" }}>
+                    {proj.project_status}
+                  </span>
+                  <Button variant="outline" size="sm">View Workspace</Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

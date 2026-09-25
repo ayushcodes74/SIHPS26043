@@ -10,12 +10,9 @@ import { useToast } from "../../context/useToast.js";
 
 const ROLE_OPTIONS = [
   { value: "CITIZEN", label: "Citizen — Report societal challenges and track resolution" },
-  { value: "STUDENT", label: "Student — Discover matching problems and contribute skills" },
-  { value: "RESEARCHER", label: "Researcher — Root cause analysis and research solutions" },
-  { value: "STARTUP", label: "Startup — Deploy innovative technology and pilot solutions" },
-  { value: "MSME", label: "MSME — Local manufacturing, engineering, and implementation" },
-  { value: "UNIVERSITY", label: "University — Department expertise and faculty participation" },
-  { value: "AUTHORITY", label: "Authority — Municipal, district, and regional administration" },
+  { value: "UNIVERSITY", label: "University — Evaluate challenges and coordinate solution teams" },
+  { value: "STARTUP", label: "Startup / MSME — Technology, mentoring, and implementation support" },
+  { value: "AUTHORITY", label: "Authority — Govern, monitor, verify, and track impact" },
 ];
 
 export function RegisterPage() {

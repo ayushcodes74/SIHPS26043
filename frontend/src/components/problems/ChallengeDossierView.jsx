@@ -50,7 +50,7 @@ export function ChallengeDossierView({ dossier, legacyAnalysis }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-              <Icon name="cpu" size={22} color="var(--color-primary-light, #60a5fa)" />
+              <Icon name="cpu" size={22} color="var(--color-primary-subtle)" />
               <h2 style={{ margin: 0, fontSize: "1.35rem", fontWeight: 700, color: "#f8fafc" }}>
                 Actionable Challenge Dossier
               </h2>
@@ -65,7 +65,7 @@ export function ChallengeDossierView({ dossier, legacyAnalysis }) {
             <span style={{ padding: "0.25rem 0.6rem", borderRadius: "999px", background: "rgba(34, 197, 94, 0.2)", color: "#4ade80", border: "1px solid rgba(34, 197, 94, 0.4)" }}>
               FACT (Explicitly Reported)
             </span>
-            <span style={{ padding: "0.25rem 0.6rem", borderRadius: "999px", background: "rgba(59, 130, 246, 0.2)", color: "#60a5fa", border: "1px solid rgba(59, 130, 246, 0.4)" }}>
+            <span style={{ padding: "0.25rem 0.6rem", borderRadius: "999px", background: "var(--color-primary-subtle)", color: "var(--color-primary)", border: "1px solid var(--color-primary-border)" }}>
               AI INFERENCE (Hypothesis)
             </span>
             <span style={{ padding: "0.25rem 0.6rem", borderRadius: "999px", background: "rgba(245, 158, 11, 0.2)", color: "#fbbf24", border: "1px solid rgba(245, 158, 11, 0.4)" }}>
@@ -90,7 +90,7 @@ export function ChallengeDossierView({ dossier, legacyAnalysis }) {
                 fontWeight: activeTab === tab.id ? 700 : 500,
                 border: "none",
                 cursor: "pointer",
-                background: activeTab === tab.id ? "var(--color-primary, #3b82f6)" : "rgba(255, 255, 255, 0.05)",
+                background: activeTab === tab.id ? "var(--color-primary, #0a0a0a)" : "rgba(255, 255, 255, 0.05)",
                 color: activeTab === tab.id ? "#ffffff" : "#94a3b8",
                 whiteSpace: "nowrap",
                 transition: "all 0.15s ease"
@@ -151,7 +151,7 @@ export function ChallengeDossierView({ dossier, legacyAnalysis }) {
 
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
-                <span style={{ padding: "0.2rem 0.5rem", borderRadius: "4px", fontSize: "0.7rem", fontWeight: 700, background: "rgba(59, 130, 246, 0.15)", color: "#2563eb" }}>
+                <span style={{ padding: "0.2rem 0.5rem", borderRadius: "4px", fontSize: "0.7rem", fontWeight: 700, background: "var(--color-primary-subtle)", color: "var(--color-primary)" }}>
                   AI INFERENCE
                 </span>
                 <strong style={{ fontSize: "0.9rem" }}>Extracted Symptoms & Community Impacts:</strong>
@@ -185,7 +185,7 @@ export function ChallengeDossierView({ dossier, legacyAnalysis }) {
               <div key={idx} style={{ padding: "0.85rem 1rem", borderRadius: "var(--radius-md)", background: "var(--bg-subtle)", border: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.2rem" }}>
-                    <span style={{ padding: "0.15rem 0.45rem", borderRadius: "4px", fontSize: "0.65rem", fontWeight: 700, background: "rgba(59, 130, 246, 0.15)", color: "#2563eb" }}>
+                    <span style={{ padding: "0.15rem 0.45rem", borderRadius: "4px", fontSize: "0.65rem", fontWeight: 700, background: "var(--color-primary-subtle)", color: "var(--color-primary)" }}>
                       AI HYPOTHESIS #{idx + 1}
                     </span>
                     <strong style={{ fontSize: "0.95rem" }}>{cause.cause}</strong>
@@ -276,7 +276,7 @@ export function ChallengeDossierView({ dossier, legacyAnalysis }) {
               <div key={idx} style={{ padding: "1rem", borderRadius: "8px", background: "var(--bg-subtle)", border: "1px solid var(--border-color)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.35rem" }}>
                   <strong style={{ fontSize: "0.95rem", color: "var(--color-primary)" }}>{cap.capability}</strong>
-                  <span style={{ fontSize: "0.65rem", padding: "0.15rem 0.4rem", borderRadius: "4px", fontWeight: 700, background: cap.priority === "essential" ? "rgba(239, 68, 68, 0.15)" : "rgba(59, 130, 246, 0.15)", color: cap.priority === "essential" ? "#dc2626" : "#2563eb" }}>
+                  <span style={{ fontSize: "0.65rem", padding: "0.15rem 0.4rem", borderRadius: "4px", fontWeight: 700, background: cap.priority === "essential" ? "rgba(239, 68, 68, 0.15)" : "var(--color-primary-subtle)", color: cap.priority === "essential" ? "#dc2626" : "var(--color-primary)" }}>
                     {cap.priority.toUpperCase()}
                   </span>
                 </div>
@@ -341,7 +341,7 @@ export function ChallengeDossierView({ dossier, legacyAnalysis }) {
               <div key={idx} style={{ padding: "1rem", borderRadius: "8px", background: "var(--bg-subtle)", border: "1px solid var(--border-color)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.35rem" }}>
                   <strong style={{ fontSize: "1rem", color: "var(--color-primary)" }}>{sol.name}</strong>
-                  <span style={{ padding: "0.2rem 0.5rem", borderRadius: "4px", fontSize: "0.7rem", fontWeight: 700, background: "rgba(59, 130, 246, 0.15)", color: "#2563eb", textTransform: "uppercase" }}>
+                  <span style={{ padding: "0.2rem 0.5rem", borderRadius: "4px", fontSize: "0.7rem", fontWeight: 700, background: "var(--color-primary-subtle)", color: "var(--color-primary)", textTransform: "uppercase" }}>
                     Effort: {sol.effort}
                   </span>
                 </div>

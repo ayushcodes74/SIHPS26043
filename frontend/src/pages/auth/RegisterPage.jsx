@@ -5,7 +5,13 @@ import { useAuth } from "../../context/useAuth.js";
 import { Link } from "../../context/RouterContext.jsx";
 import { useRouter } from "../../context/useRouter.js";
 import { useToast } from "../../context/useToast.js";
-import { useTranslation } from "../../context/useTranslation.js";
+
+const ROLE_OPTIONS = [
+  { value: "CITIZEN", label: "Citizen — Report societal challenges and track resolution" },
+  { value: "UNIVERSITY", label: "University — Evaluate challenges and coordinate solution teams" },
+  { value: "STARTUP", label: "Startup / MSME — Technology, mentoring, and implementation support" },
+  { value: "AUTHORITY", label: "Authority — Govern, monitor, verify, and track impact" },
+];
 
 export function RegisterPage() {
   const { register } = useAuth();

@@ -21,7 +21,12 @@ const {
     districts,
     statusAnalytics,
     clusters,
-    recent
+    recent,
+    institutionalParticipation,
+    industryEcosystem,
+    funding,
+    testing,
+    outcomes
 } = require("../controllers/authorityDashboardController");
 
 const { authenticate } = require("../middleware/authMiddleware");
@@ -53,5 +58,20 @@ router.get("/clusters", clusters);
 
 // GET /api/authority/dashboard/recent[?limit=N]
 router.get("/recent", recent);
+
+// GET /api/authority/dashboard/institutional-participation (Section 5)
+router.get("/institutional-participation", institutionalParticipation);
+
+// GET /api/authority/dashboard/industry-ecosystem (Section 6)
+router.get("/industry-ecosystem", industryEcosystem);
+
+// GET /api/authority/dashboard/funding (Section 7)
+router.get("/funding", funding);
+
+// GET /api/authority/dashboard/testing (Section 8)
+router.get("/testing", testing);
+
+// GET /api/authority/dashboard/outcomes (Section 9)
+router.get("/outcomes", outcomes);
 
 module.exports = router;

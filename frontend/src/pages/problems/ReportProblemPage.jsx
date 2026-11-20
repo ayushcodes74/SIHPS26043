@@ -4,7 +4,6 @@ import { Button } from "../../components/common/Button";
 import { Card } from "../../components/common/Cards";
 import { Icon } from "../../components/common/Icons";
 import { AIAnalysisView } from "../../components/problems/AIAnalysisView.jsx";
-import { ChallengeDossierView } from "../../components/problems/ChallengeDossierView.jsx";
 import { ExpertiseMatchingView } from "../../components/problems/ExpertiseMatchingView.jsx";
 import { problemApi, challengeApi, matchingApi } from "../../services/api.js";
 import { useToast } from "../../context/useToast.js";
@@ -1284,8 +1283,6 @@ export function ReportProblemPage() {
           {/* AI Problem Analysis Card (Real AI Analysis from Backend) */}
           {aiAnalysis && (
             <>
-              <ChallengeDossierView dossier={aiAnalysis.dossier} legacyAnalysis={aiAnalysis} />
-
               <Card
                 title={t("report.aiAnalysisTitle")}
                 subtitle={`Automated NLP intelligence for PRB-${String(createdProblem.id).padStart(4, "0")}`}

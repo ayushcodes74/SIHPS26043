@@ -55,10 +55,9 @@ export function Sidebar() {
 
       case "UNIVERSITY":
         roleItems = [
-          { path: "/matches", label: t("nav.matchedProblems"), icon: "building" },
-          { path: "/faculty-students", label: t("nav.facultyStudents"), icon: "graduation-cap" },
-          { path: "/solutions", label: t("nav.solutions"), icon: "cpu" },
-          { path: "/impact", label: t("nav.institutionalImpact"), icon: "activity" },
+          { path: "/matches",          label: "Matched Challenges",  icon: "target" },
+          { path: "/projects",         label: "My Projects",          icon: "briefcase" },
+          { path: "/faculty-students", label: "Faculty & Students",   icon: "graduation-cap" },
         ];
         break;
 
@@ -73,11 +72,13 @@ export function Sidebar() {
 
       case "AUTHORITY":
         roleItems = [
-          { path: "/explore", label: t("nav.priorityProblems"), icon: "alert-triangle" },
-          { path: "/solutions", label: t("nav.solutionReview"), icon: "cpu" },
-          { path: "/impact", label: t("nav.implementationPilot"), icon: "activity" },
-          { path: "/dashboard/analytics", label: t("nav.analyticsDashboard"), icon: "activity" },
-          { path: "/dashboard/trust", label: t("nav.trustAntiGaming"), icon: "shield-check" },
+          { path: "/projects", label: "Institutional Projects", icon: "briefcase" },
+          { path: "/explore", label: "Priority Problems", icon: "alert-triangle" },
+          { path: "/report", label: t("nav.report"), icon: "plus-circle" },
+          { path: "/solutions", label: "Solution Review", icon: "cpu" },
+          { path: "/impact", label: "Implementation & Pilot", icon: "activity" },
+          { path: "/dashboard/analytics", label: "Analytics Dashboard", icon: "activity" },
+          { path: "/dashboard/trust", label: "Trust & Anti-Gaming", icon: "shield-check" },
         ];
         break;
 
@@ -151,7 +152,7 @@ export function Sidebar() {
               alignItems: "center",
               justifyContent: "center",
               color: "#ffffff",
-              boxShadow: "0 4px 14px rgba(59, 130, 246, 0.3)",
+              boxShadow: "0 2px 8px rgba(10, 10, 10, 0.15)",
               flexShrink: 0,
             }}
           >
@@ -163,7 +164,7 @@ export function Sidebar() {
               <div style={{ fontWeight: 800, fontSize: "1.15rem", letterSpacing: "-0.02em" }}>
                 CivicSync
               </div>
-              <div style={{ fontSize: "0.7rem", color: "#94a3b8", fontWeight: 500 }}>
+              <div style={{ fontSize: "0.7rem", color: "var(--text-light)", fontWeight: 500 }}>
                 Civic Innovation
               </div>
             </div>
@@ -176,7 +177,7 @@ export function Sidebar() {
           style={{
             background: "none",
             border: "none",
-            color: "#94a3b8",
+            color: "var(--text-light)",
             cursor: "pointer",
             padding: "0.35rem",
             display: collapsed ? "none" : "flex",
@@ -230,16 +231,17 @@ export function Sidebar() {
                 padding: collapsed ? "0.75rem" : "0.75rem 1rem",
                 justifyContent: collapsed ? "center" : "flex-start",
                 borderRadius: "var(--radius-lg)",
-                color: active ? "var(--color-primary-dark)" : "var(--text-secondary)",
-                backgroundColor: active ? "var(--color-primary-subtle)" : "transparent",
+                color: active ? "var(--text-primary)" : "var(--text-secondary)",
+                backgroundColor: active ? "var(--bg-sidebar-active)" : "transparent",
                 fontWeight: active ? 700 : 500,
                 fontSize: "0.875rem",
                 textDecoration: "none",
                 transition: "all var(--transition-fast)",
+                borderLeft: active ? "2px solid var(--color-primary)" : "2px solid transparent",
               }}
               title={collapsed ? item.label : undefined}
             >
-              <div style={{ color: active ? "var(--color-primary)" : "var(--text-muted)", display: "flex" }}>
+              <div style={{ color: active ? "var(--text-primary)" : "var(--text-muted)", display: "flex" }}>
                 <Icon name={item.icon} size={20} />
               </div>
               {!collapsed && <span>{item.label}</span>}

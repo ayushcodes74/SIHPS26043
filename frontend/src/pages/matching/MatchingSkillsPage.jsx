@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { studentApi } from "../../services/api";
+import { studentApi, universityApi } from "../../services/api";
 import { useAuth } from "../../context/useAuth";
 import { useRouter } from "../../context/useRouter";
 import { Card } from "../../components/common/Cards";
@@ -52,6 +52,14 @@ export function MatchingSkillsPage() {
     async function fetchData() {
       setError("");
       try {
+        if (role === "UNIVERSITY") {
+          const matchRes = await universityApi.getMatchedChallenges();
+          if (ignore) return;
+          setMatchedProblems(matchRes.challenges || []);
+          setLoading(false);
+          return;
+        }
+
         const profRes = await studentApi.getProfile();
         if (ignore) return;
         const currentProfile = profRes.profile;
@@ -80,7 +88,7 @@ export function MatchingSkillsPage() {
     return () => {
       ignore = true;
     };
-  }, [sortBy]);
+  }, [sortBy, role]);
 
   // Handle saving updated skills
   const handleSaveSkills = async () => {
@@ -121,30 +129,77 @@ export function MatchingSkillsPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "1rem" }}>
         <div>
           <h1 style={{ margin: "0 0 0.5rem", fontSize: "2rem", fontWeight: 800, letterSpacing: "-0.02em" }}>
-            Problems Matching Your Skills
+            {role === "UNIVERSITY" ? "Matched Institutional Challenges" : "Problems Matching Your Skills"}
           </h1>
           <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "1.05rem", maxWidth: "600px" }}>
-            Our explainable matching engine connects your technical competencies directly with active regional challenges where you can make a measurable difference.
+            {role === "UNIVERSITY"
+              ? "Challenges matched to your institutional expertise profile. Open any challenge to evaluate it and create an institutional project workspace."
+              : "Our explainable matching engine connects your technical competencies directly with active regional challenges where you can make a measurable difference."}
           </p>
         </div>
 
         <div style={{ display: "flex", gap: "0.75rem" }}>
           <Button variant="outline" icon="search" onClick={() => navigate("/explore")} style={{ backgroundColor: "#ffffff" }}>
-            Explore Catalog
+            Explore All
           </Button>
-          <Button variant="outline" icon="award" onClick={() => navigate("/reputation")} style={{ backgroundColor: "#ffffff" }}>
-            Your Impact
-          </Button>
+          {role === "UNIVERSITY" ? (
+            <Button variant="outline" icon="briefcase" onClick={() => navigate("/projects")} style={{ backgroundColor: "#ffffff" }}>
+              My Projects
+            </Button>
+          ) : (
+            <Button variant="outline" icon="award" onClick={() => navigate("/reputation")} style={{ backgroundColor: "#ffffff" }}>
+              Your Impact
+            </Button>
+          )}
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 3fr) minmax(0, 7fr)", gap: "2rem", alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: role === "UNIVERSITY" ? "minmax(0, 3fr) minmax(0, 7fr)" : "minmax(0, 3fr) minmax(0, 7fr)", gap: "2rem", alignItems: "start" }}>
         
-        {/* Left Column: Skills Profile (Sticky) */}
+        {/* Left Column: for University — Institutional info; for Students — Skills Profile */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", position: "sticky", top: "100px" }}>
+          {role === "UNIVERSITY" ? (
+            /* University: show evaluation guide */
+            <>
+              <Card title="Institutional Expertise" subtitle="Matched via institution profile">
+                {loading ? (
+                  <LoadingSkeleton lines={2} />
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                    <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+                      These challenges are matched to your institution&apos;s registered expertise domains. Your matching is profile-driven, not skill-tag based.
+                    </p>
+                    <Button variant="outline" size="sm" icon="graduation-cap" onClick={() => navigate("/faculty-students")}>
+                      Manage Faculty &amp; Students
+                    </Button>
+                    <Button variant="outline" size="sm" icon="briefcase" onClick={() => navigate("/projects")}>
+                      View All Projects
+                    </Button>
+                  </div>
+                )}
+              </Card>
+
+              <Card style={{ backgroundColor: "var(--color-info-subtle)", border: "1px solid var(--color-info-border)", boxShadow: "none" }}>
+                <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
+                  <div style={{ color: "var(--color-info)" }}><Icon name="info" size={20} /></div>
+                  <div>
+                    <h4 style={{ margin: "0 0 0.35rem", fontSize: "0.92rem", fontWeight: 700, color: "var(--color-info)" }}>Evaluation Workflow</h4>
+                    <ol style={{ margin: 0, padding: "0 0 0 1rem", fontSize: "0.78rem", color: "var(--text-secondary)", lineHeight: 1.6 }}>
+                      <li>Open a challenge below</li>
+                      <li>Set status to <strong>In Project</strong></li>
+                      <li>Create Project Workspace</li>
+                      <li>Assign team, mentor, industry</li>
+                    </ol>
+                  </div>
+                </div>
+              </Card>
+            </>
+          ) : (
+            /* Student: show skills editor */
+            <>
           <Card
             title="Your Competencies"
-            subtitle={profile ? `${profile.name || user?.name} • ${profile.course || "Contributor"}` : "Profile Skills"}
+            subtitle={role === "UNIVERSITY" ? "Institutional Expertise (From Profile)" : (profile ? `${profile.name || user?.name} • ${profile.course || "Contributor"}` : "Profile Skills")}
             actions={
               !isEditingSkills && role !== "UNIVERSITY" && (
                 <Button
@@ -369,7 +424,9 @@ export function MatchingSkillsPage() {
                </div>
             </div>
           </Card>
-        </div>
+        </>
+      )}
+    </div>
 
         {/* Right Column: Problem Feed */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
@@ -430,11 +487,11 @@ export function MatchingSkillsPage() {
               icon="target"
               title="No problems currently match your skills"
               description="Add more skills to your profile to discover more opportunities, or explore the general catalog."
-              actionLabel="Update Skills"
-              onAction={() => {
+              actionLabel={role !== "UNIVERSITY" ? "Update Skills" : undefined}
+              onAction={role !== "UNIVERSITY" ? () => {
                 setEditingSkillsList(skills);
                 setIsEditingSkills(true);
-              }}
+              } : undefined}
             />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
@@ -495,23 +552,45 @@ export function MatchingSkillsPage() {
                       </div>
 
                       {/* Match Score Indicator Badge */}
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.5rem",
-                          padding: "0.45rem 1rem",
-                          borderRadius: "var(--radius-full)",
-                          backgroundColor: isStrong ? "var(--color-success-subtle)" : "var(--color-primary-subtle)",
-                          border: `1px solid ${isStrong ? "var(--color-success-border)" : "var(--color-primary-border)"}`,
-                          color: tierColor,
-                        }}
-                      >
-                        <Icon name="check-circle" size={16} />
-                        <span style={{ fontSize: "0.9rem", fontWeight: 800 }}>
-                          {prob.match_tier} ({prob.match_score}%)
-                        </span>
-                      </div>
+                      {role === "UNIVERSITY" ? (
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          {prob.evaluation_status ? (
+                            <StatusBadge status={prob.evaluation_status} />
+                          ) : (
+                            <span
+                              style={{
+                                fontSize: "0.8rem",
+                                fontWeight: 700,
+                                padding: "0.35rem 0.85rem",
+                                borderRadius: "var(--radius-full)",
+                                backgroundColor: "var(--color-primary-subtle)",
+                                color: "var(--color-primary)",
+                                border: "1px solid var(--color-primary-border)",
+                              }}
+                            >
+                              Institutional Match
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.5rem",
+                            padding: "0.45rem 1rem",
+                            borderRadius: "var(--radius-full)",
+                            backgroundColor: isStrong ? "var(--color-success-subtle)" : "var(--color-primary-subtle)",
+                            border: `1px solid ${isStrong ? "var(--color-success-border)" : "var(--color-primary-border)"}`,
+                            color: tierColor,
+                          }}
+                        >
+                          <Icon name="check-circle" size={16} />
+                          <span style={{ fontSize: "0.9rem", fontWeight: 800 }}>
+                            {prob.match_tier} ({prob.match_score}%)
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Short Description */}
@@ -520,105 +599,155 @@ export function MatchingSkillsPage() {
                     </p>
 
                     {/* Explainable Matching Breakdown Box */}
-                    <div
-                      style={{
-                        backgroundColor: "#fafafa",
-                        borderRadius: "var(--radius-lg)",
-                        padding: "1.25rem",
-                        border: "1px solid var(--border-color)",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "1rem",
-                      }}
-                    >
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem" }}>
-                        {/* Matched Skills */}
-                        <div>
-                          <div style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--color-success)", textTransform: "uppercase", marginBottom: "0.5rem", letterSpacing: "0.05em" }}>
-                            ✓ Matched Expertise ({prob.matched_skills?.length || 0})
-                          </div>
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
-                            {prob.matched_skills?.map((skill) => (
-                              <span
-                                key={skill}
-                                style={{
-                                  fontSize: "0.8rem",
-                                  fontWeight: 600,
-                                  padding: "0.2rem 0.6rem",
-                                  borderRadius: "var(--radius-full)",
-                                  backgroundColor: "var(--color-success-subtle)",
-                                  color: "var(--color-success)",
-                                  border: "1px solid var(--color-success-border)",
-                                }}
-                              >
-                                ✓ {skill}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Missing / Additional Required Skills */}
-                        {prob.missing_skills && prob.missing_skills.length > 0 && (
+                    {role !== "UNIVERSITY" ? (
+                      <div
+                        style={{
+                          backgroundColor: "#fafafa",
+                          borderRadius: "var(--radius-lg)",
+                          padding: "1.25rem",
+                          border: "1px solid var(--border-color)",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "1rem",
+                        }}
+                      >
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem" }}>
+                          {/* Matched Skills */}
                           <div>
-                            <div style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem", letterSpacing: "0.05em" }}>
-                              Other Required Skills ({prob.missing_skills.length})
+                            <div style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--color-success)", textTransform: "uppercase", marginBottom: "0.5rem", letterSpacing: "0.05em" }}>
+                              ✓ Matched Expertise ({prob.matched_skills?.length || 0})
                             </div>
                             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
-                              {prob.missing_skills.map((skill) => (
+                              {prob.matched_skills?.map((skill) => (
                                 <span
                                   key={skill}
                                   style={{
                                     fontSize: "0.8rem",
-                                    fontWeight: 500,
+                                    fontWeight: 600,
                                     padding: "0.2rem 0.6rem",
                                     borderRadius: "var(--radius-full)",
-                                    backgroundColor: "#ffffff",
-                                    color: "var(--text-secondary)",
-                                    border: "1px solid var(--border-color)",
+                                    backgroundColor: "var(--color-success-subtle)",
+                                    color: "var(--color-success)",
+                                    border: "1px solid var(--color-success-border)",
                                   }}
                                 >
-                                  {skill}
+                                  ✓ {skill}
                                 </span>
                               ))}
                             </div>
                           </div>
+
+                          {/* Missing / Additional Required Skills */}
+                          {prob.missing_skills && prob.missing_skills.length > 0 && (
+                            <div>
+                              <div style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "0.5rem", letterSpacing: "0.05em" }}>
+                                Other Required Skills ({prob.missing_skills.length})
+                              </div>
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
+                                {prob.missing_skills.map((skill) => (
+                                  <span
+                                    key={skill}
+                                    style={{
+                                      fontSize: "0.8rem",
+                                      fontWeight: 500,
+                                      padding: "0.2rem 0.6rem",
+                                      borderRadius: "var(--radius-full)",
+                                      backgroundColor: "#ffffff",
+                                      color: "var(--text-secondary)",
+                                      border: "1px solid var(--border-color)",
+                                    }}
+                                  >
+                                    {skill}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Explainable Match Reason */}
+                        {prob.match_reason && (
+                          <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", display: "flex", alignItems: "flex-start", gap: "0.6rem", paddingTop: "1rem", borderTop: "1px solid var(--border-color)" }}>
+                            <div style={{ color: "var(--color-primary)", marginTop: "2px" }}><Icon name="sparkles" size={16} /></div>
+                            <span style={{ lineHeight: 1.5 }}>
+                              <strong style={{ color: "var(--text-primary)" }}>Why this matches:</strong> {prob.match_reason}
+                            </span>
+                          </div>
                         )}
                       </div>
-
-                      {/* Explainable Match Reason */}
-                      <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", display: "flex", alignItems: "flex-start", gap: "0.6rem", paddingTop: "1rem", borderTop: "1px solid var(--border-color)" }}>
-                        <div style={{ color: "var(--color-primary)", marginTop: "2px" }}><Icon name="sparkles" size={16} /></div>
-                        <span style={{ lineHeight: 1.5 }}>
-                          <strong style={{ color: "var(--text-primary)" }}>Why this matches:</strong> {prob.match_reason}
-                        </span>
+                    ) : (
+                      <div
+                        style={{
+                          backgroundColor: "#fafafa",
+                          borderRadius: "var(--radius-md)",
+                          padding: "1rem 1.25rem",
+                          border: "1px solid var(--border-color)",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          flexWrap: "wrap",
+                          gap: "0.75rem",
+                          fontSize: "0.85rem",
+                        }}
+                      >
+                        <div style={{ display: "flex", gap: "1.25rem", flexWrap: "wrap" }}>
+                          <div>
+                            <span style={{ color: "var(--text-muted)" }}>Priority Score: </span>
+                            <strong>{prob.priority_score ?? "Normal"}</strong>
+                          </div>
+                          <div>
+                            <span style={{ color: "var(--text-muted)" }}>Domain: </span>
+                            <strong>{prob.category || "Civic Challenge"}</strong>
+                          </div>
+                          {prob.evaluation_status && (
+                            <div>
+                              <span style={{ color: "var(--text-muted)" }}>Evaluation Status: </span>
+                              <strong style={{ color: "var(--color-primary)" }}>{prob.evaluation_status}</strong>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Footer Action Buttons */}
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem", paddingTop: "0.5rem" }}>
-                      <Button
-                        variant="ghost"
-                        icon="info"
-                        onClick={() => setDetailModalProblem(prob)}
-                      >
-                        View Analysis Details
-                      </Button>
+                      {role !== "UNIVERSITY" ? (
+                        <Button
+                          variant="ghost"
+                          icon="info"
+                          onClick={() => setDetailModalProblem(prob)}
+                        >
+                          View Analysis Details
+                        </Button>
+                      ) : <div />}
 
                       <div style={{ display: "flex", gap: "0.75rem" }}>
-                        <Button
-                          variant="outline"
-                          icon="arrow-right"
-                          onClick={() => navigate(`/problems/${prob.id}`)}
-                        >
-                          Problem Details
-                        </Button>
-                        <Button
-                          variant="primary"
-                          icon="cpu"
-                          onClick={() => navigate(`/problems/${prob.id}?tab=solutions`)}
-                        >
-                          Contribute Solution
-                        </Button>
+                        {role === "UNIVERSITY" ? (
+                          <Button
+                            variant="primary"
+                            icon="briefcase"
+                            onClick={() => navigate(`/problems/${prob.id}`)}
+                          >
+                            Evaluate &amp; Create Project
+                          </Button>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              icon="arrow-right"
+                              onClick={() => navigate(`/problems/${prob.id}`)}
+                            >
+                              Problem Details
+                            </Button>
+                            <Button
+                              variant="primary"
+                              icon="cpu"
+                              onClick={() => navigate(`/problems/${prob.id}?tab=solutions`)}
+                            >
+                              Contribute Solution
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>

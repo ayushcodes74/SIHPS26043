@@ -561,6 +561,31 @@ export const authorityDashboardApi = {
       method: "GET",
       params: { limit },
     }),
+
+  getInstitutionalParticipation: () =>
+    apiRequest("/authority/dashboard/institutional-participation", {
+      method: "GET",
+    }),
+
+  getIndustryEcosystem: () =>
+    apiRequest("/authority/dashboard/industry-ecosystem", {
+      method: "GET",
+    }),
+
+  getFunding: () =>
+    apiRequest("/authority/dashboard/funding", {
+      method: "GET",
+    }),
+
+  getTesting: () =>
+    apiRequest("/authority/dashboard/testing", {
+      method: "GET",
+    }),
+
+  getOutcomes: () =>
+    apiRequest("/authority/dashboard/outcomes", {
+      method: "GET",
+    }),
 };
 
 // ============================================================================
@@ -761,6 +786,155 @@ export const universityApi = {
     }),
   getFacultyAndStudents: () =>
     apiRequest("/university/me/faculty-students", {
+      method: "GET",
+    }),
+  getMatchedChallenges: () =>
+    apiRequest("/university/challenges", {
+      method: "GET",
+    }),
+  getChallengeEvaluation: (problemId) =>
+    apiRequest(`/university/challenges/${problemId}/evaluation`, {
+      method: "GET",
+    }),
+  createChallengeEvaluation: (problemId, payload) =>
+    apiRequest(`/university/challenges/${problemId}/evaluation`, {
+      method: "POST",
+      body: payload,
+    }),
+  updateChallengeEvaluation: (problemId, payload) =>
+    apiRequest(`/university/challenges/${problemId}/evaluation`, {
+      method: "PATCH",
+      body: payload,
+    }),
+};
+
+// ============================================================================
+// INSTITUTIONAL PROJECTS APIs (backend/src/routes/projectRoutes.js)
+// ============================================================================
+export const projectApi = {
+  getProjects: () =>
+    apiRequest("/projects", {
+      method: "GET",
+    }),
+
+  createProject: (payload) =>
+    apiRequest("/projects", {
+      method: "POST",
+      body: payload,
+    }),
+
+  updateProjectStatus: (id, payload) =>
+    apiRequest(`/projects/${id}/status`, {
+      method: "PATCH",
+      body: payload,
+    }),
+
+  getProjectTests: (id) =>
+    apiRequest(`/projects/${id}/tests`, {
+      method: "GET",
+    }),
+
+  recordTestResult: (id, payload) =>
+    apiRequest(`/projects/${id}/tests`, {
+      method: "POST",
+      body: payload,
+    }),
+
+  addIndustryCollaboration: (id, payload) =>
+    apiRequest(`/projects/${id}/collaborations`, {
+      method: "POST",
+      body: payload,
+    }),
+
+  updateCollaborationStatus: (id, collabId, payload) =>
+    apiRequest(`/projects/${id}/collaborations/${collabId}`, {
+      method: "PATCH",
+      body: payload,
+    }),
+
+  getProjectTeam: (id) =>
+    apiRequest(`/projects/${id}/team`, {
+      method: "GET",
+    }),
+
+  setProjectTeam: (id, payload) =>
+    apiRequest(`/projects/${id}/team`, {
+      method: "POST",
+      body: payload,
+    }),
+
+  addProjectTeamMember: (id, payload) =>
+    apiRequest(`/projects/${id}/team/members`, {
+      method: "POST",
+      body: payload,
+    }),
+
+  removeProjectTeamMember: (id, userId) =>
+    apiRequest(`/projects/${id}/team/members/${userId}`, {
+      method: "DELETE",
+    }),
+
+  getProjectMentor: (id) =>
+    apiRequest(`/projects/${id}/mentor`, {
+      method: "GET",
+    }),
+
+  getEligibleMentors: (id) =>
+    apiRequest(`/projects/${id}/eligible-mentors`, {
+      method: "GET",
+    }),
+
+  assignFacultyMentor: (id, payload) =>
+    apiRequest(`/projects/${id}/mentor`, {
+      method: "POST",
+      body: payload,
+    }),
+
+  removeFacultyMentor: (id) =>
+    apiRequest(`/projects/${id}/mentor`, {
+      method: "DELETE",
+    }),
+
+  getProjectCollaborations: (id) =>
+    apiRequest(`/projects/${id}/collaborations`, {
+      method: "GET",
+    }),
+
+  getEligiblePartners: (id) =>
+    apiRequest(`/projects/${id}/eligible-partners`, {
+      method: "GET",
+    }),
+
+  getProjectFunding: (id) =>
+    apiRequest(`/projects/${id}/funding`, {
+      method: "GET",
+    }),
+
+  requestFunding: (id, payload) =>
+    apiRequest(`/projects/${id}/funding`, {
+      method: "POST",
+      body: payload,
+    }),
+
+  updateFundingStatus: (id, fundingId, payload) =>
+    apiRequest(`/projects/${id}/funding/${fundingId}`, {
+      method: "PATCH",
+      body: payload,
+    }),
+
+  getProjectOutcomes: (id) =>
+    apiRequest(`/projects/${id}/outcomes`, {
+      method: "GET",
+    }),
+
+  addOutcome: (id, payload) =>
+    apiRequest(`/projects/${id}/outcomes`, {
+      method: "POST",
+      body: payload,
+    }),
+
+  getProjectActivity: (id) =>
+    apiRequest(`/projects/${id}/activity`, {
       method: "GET",
     }),
 };

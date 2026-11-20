@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node src/server.js",
-    "test": "jest --verbose --forceExit --runInBand"
+    "test": "jest --verbose --forceExit --runInBand",
+    "seed:demo": "node seed_university_presentation.js"
   },
   "keywords": [],
   "author": "",

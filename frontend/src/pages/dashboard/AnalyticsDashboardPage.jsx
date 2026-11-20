@@ -102,7 +102,7 @@ export default function AnalyticsDashboardPage() {
                 display: "inline-flex",
                 padding: "0.4rem",
                 borderRadius: "8px",
-                background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
+                background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)",
                 color: "#fff",
               }}
             >
@@ -283,7 +283,7 @@ export default function AnalyticsDashboardPage() {
                                 style={{
                                   width: `${pct}%`,
                                   height: "100%",
-                                  background: "linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%)",
+                                  background: "linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)",
                                   borderRadius: "4px",
                                   transition: "width 0.5s ease",
                                 }}
@@ -305,7 +305,7 @@ export default function AnalyticsDashboardPage() {
                         <span style={{ fontWeight: "600" }}>{pipeline.reported} (100%)</span>
                       </div>
                       <div style={{ height: "10px", backgroundColor: "#e2e8f0", borderRadius: "5px", overflow: "hidden" }}>
-                        <div style={{ width: "100%", height: "100%", backgroundColor: "#3b82f6" }} />
+                        <div style={{ width: "100%", height: "100%", backgroundColor: "var(--color-primary)" }} />
                       </div>
                     </div>
 
@@ -418,7 +418,7 @@ export default function AnalyticsDashboardPage() {
                     backgroundColor: "var(--bg-secondary, #f8fafc)",
                     borderRadius: "8px",
                     padding: "1.25rem",
-                    borderLeft: "4px solid #3b82f6",
+                    borderLeft: "4px solid var(--color-primary)",
                   }}
                 >
                   <h4 style={{ margin: "0 0 0.5rem 0", fontSize: "0.95rem", fontWeight: "600" }}>Pipeline Policy Notice</h4>

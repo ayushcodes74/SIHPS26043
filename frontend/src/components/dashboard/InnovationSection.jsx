@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { problemApi, reputationApi } from "../../services/api";
+import { problemApi, reputationApi, projectApi } from "../../services/api";
 import { Card, StatCard } from "../common/Cards";
 import { Button } from "../common/Button";
 import { StatusBadge } from "../common/Badges";
@@ -15,7 +15,7 @@ export function InnovationSection({ role }) {
 
   const [loading, setLoading] = useState(true);
   const [techProblems, setTechProblems] = useState([]);
-  const [authoritySelectedProblems, setAuthoritySelectedProblems] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [reputation, setReputation] = useState(null);
   const [error, setError] = useState("");
 
@@ -26,9 +26,10 @@ export function InnovationSection({ role }) {
     async function loadData() {
       setError("");
       try {
-        const [probRes, repRes] = await Promise.allSettled([
-          problemApi.getProblems({ limit: 50 }),
+        const [probRes, repRes, projRes] = await Promise.allSettled([
+          problemApi.getProblems({ limit: 25 }),
           reputationApi.getMyReputation(),
+          projectApi.getProjects().catch(() => ({ projects: [] }))
         ]);
 
         if (!ignore) {
@@ -46,6 +47,9 @@ export function InnovationSection({ role }) {
               ["TECHNICAL", "INFRASTRUCTURE", "ENVIRONMENTAL", "OPERATIONAL"].includes((p.category || "").toUpperCase())
             );
             setTechProblems(relevant.length > 0 ? relevant : all);
+          }
+          if (projRes.status === "fulfilled" && projRes.value?.projects) {
+            setProjects(projRes.value.projects);
           }
           setLoading(false);
         }
@@ -380,6 +384,38 @@ export function InnovationSection({ role }) {
                 </div>
               );
             })}
+          </div>
+        )}
+      </Card>
+
+      {/* PROJECT COLLABORATIONS */}
+      <Card title="Project Collaborations" subtitle="Institutional projects seeking industry partnership">
+        {projects.length === 0 ? (
+          <EmptyState icon="briefcase" title="No active collaborations" description="Wait for universities to invite you to projects or browse matching challenges." />
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            {projects.slice(0, 5).map(proj => (
+              <div
+                key={proj.id}
+                onClick={() => navigate(`/projects/${proj.id}`)}
+                style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  padding: "1rem", border: "1px solid var(--border-color)", borderRadius: "var(--radius-lg)",
+                  cursor: "pointer"
+                }}
+              >
+                <div>
+                  <h4 style={{ margin: "0 0 0.25rem", fontSize: "1rem", fontWeight: 700 }}>{proj.title}</h4>
+                  <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                    Status: {proj.project_status}
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                  <Button variant="outline" size="sm">Offer Mentorship</Button>
+                  <Icon name="chevron-right" size={16} color="var(--text-light)" />
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </Card>

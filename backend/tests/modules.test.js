@@ -209,7 +209,7 @@ describe("Module 5 — Student Matching", () => {
     // T1 — Strong student match: Student Strong has Groundwater, Water Quality, Environmental Engineering (3/4 = 75)
     test("T1 — Strong student match", async () => {
         const res = await request(app)
-            .get(`/api/problems/${PROBLEM_ID_WITH_EXPERTISE}/student-matches`)
+            .get(`/api/problems/${PROBLEM_ID_WITH_EXPERTISE}/student-matches?limit=50`)
             .set("Authorization", `Bearer ${citizenToken}`);
 
         expect(res.status).toBe(200);
@@ -236,7 +236,7 @@ describe("Module 5 — Student Matching", () => {
     // T2 — Partial student match: Student Medium has Water Quality (1/4 = 25)
     test("T2 — Partial student match", async () => {
         const res = await request(app)
-            .get(`/api/problems/${PROBLEM_ID_WITH_EXPERTISE}/student-matches`)
+            .get(`/api/problems/${PROBLEM_ID_WITH_EXPERTISE}/student-matches?limit=50`)
             .set("Authorization", `Bearer ${citizenToken}`);
 
         expect(res.status).toBe(200);
@@ -262,7 +262,7 @@ describe("Module 5 — Student Matching", () => {
         // This is implicitly tested since the required_expertise array contains
         // "Groundwater" and student has "Groundwater" — but verify via lowercased comparison
         const res = await request(app)
-            .get(`/api/problems/${PROBLEM_ID_WITH_EXPERTISE}/student-matches`)
+            .get(`/api/problems/${PROBLEM_ID_WITH_EXPERTISE}/student-matches?limit=50`)
             .set("Authorization", `Bearer ${citizenToken}`);
 
         expect(res.status).toBe(200);
